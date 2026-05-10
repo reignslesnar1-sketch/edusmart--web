@@ -1,9 +1,9 @@
-Flask==2.3.3
-Werkzeug==2.3.7
+Flask==3.0.0
+Werkzeug==3.0.1
 Jinja2==3.1.2
 requests==2.31.0
 qrcode[pil]==7.4.2
-reportlab==4.0.4
-Pillow==10.0.0
+reportlab==4.0.9
+Pillow==11.0.0
 africastalking==1.2.3
-gunicorn==21.2.0
+gunicorn==22.0.0
