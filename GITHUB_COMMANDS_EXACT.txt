@@ -1,0 +1,185 @@
+═════════════════════════════════════════════════════════════════════════════
+     EXACT POWERSHELL COMMANDS TO RUN (After Entering Your Username)
+═════════════════════════════════════════════════════════════════════════════
+
+After you enter your GitHub username in the script, you'll see these commands:
+
+═════════════════════════════════════════════════════════════════════════════
+
+COMMAND 1 OF 3:
+────────────────────────────────────────────────────────────────────────────
+
+& "C:\Program Files\Git\cmd\git.exe" branch -M main
+
+What it does: Renames your branch to "main"
+Expected output: (no output, just completes)
+
+═════════════════════════════════════════════════════════════════════════════
+
+COMMAND 2 OF 3:
+────────────────────────────────────────────────────────────────────────────
+
+& "C:\Program Files\Git\cmd\git.exe" remote add origin https://github.com/YOUR-USERNAME/edusmart-web.git
+
+Replace YOUR-USERNAME with your actual GitHub username!
+
+Example if your username is "john_smith":
+& "C:\Program Files\Git\cmd\git.exe" remote add origin https://github.com/john_smith/edusmart-web.git
+
+What it does: Connects to your GitHub repository
+Expected output: (no output, just completes)
+
+═════════════════════════════════════════════════════════════════════════════
+
+COMMAND 3 OF 3:
+────────────────────────────────────────────────────────────────────────────
+
+& "C:\Program Files\Git\cmd\git.exe" push -u origin main
+
+What it does: Pushes your code to GitHub
+Expected output: 
+  - Will ask for username and password
+  - Shows: Enter credentials...
+
+═════════════════════════════════════════════════════════════════════════════
+
+WHEN ASKED FOR CREDENTIALS:
+────────────────────────────────────────────────────────────────────────────
+
+A popup window will appear asking:
+
+  Username: YOUR_GITHUB_USERNAME
+  Password: YOUR_GITHUB_TOKEN
+
+HOW TO GET THE TOKEN:
+
+1. Go to: https://github.com/settings/tokens
+2. Click "Generate new token"
+3. Fill in:
+   - Token name: deployment
+   - Select: repo (check the box)
+4. Scroll down and click "Generate token"
+5. A long string appears - COPY IT COMPLETELY
+6. Return to PowerShell
+7. Paste the token as the password
+
+═════════════════════════════════════════════════════════════════════════════
+
+EXPECTED OUTPUT AFTER COMMAND 3:
+────────────────────────────────────────────────────────────────────────────
+
+Something like:
+
+  Enumerating objects: 25, done.
+  Counting objects: 100% (25/25), done.
+  Delta compression using up to 8 threads
+  Compressing objects: 100% (23/23), done.
+  Writing objects: 100% (25/25), 45.98 KiB | 2.30 MiB/s, done.
+  
+  * [new branch]      main -> main
+  branch 'main' set up to track 'origin/main'.
+
+This means SUCCESS! ✅
+
+═════════════════════════════════════════════════════════════════════════════
+
+WHAT HAPPENS AFTER SUCCESS:
+────────────────────────────────────────────────────────────────────────────
+
+You'll see:
+
+  =====================================================
+  [OK] Code pushed to GitHub!
+  =====================================================
+  
+  [OK] Code is now on GitHub!
+  
+  NEXT STEP: Deploy to Render
+  
+  1. Go to: https://dashboard.render.com
+  2. Click 'New +' > 'Web Service'
+  ...
+
+═════════════════════════════════════════════════════════════════════════════
+
+MANUAL COPY-PASTE (If script doesn't run automatically):
+────────────────────────────────────────────────────────────────────────────
+
+If the script shows the commands but doesn't run them, copy and paste manually:
+
+1. Right-click PowerShell window title bar
+2. Select: Edit > Select All
+3. Copy the command shown
+4. Right-click PowerShell
+5. Select: Edit > Paste
+6. Press Enter
+
+═════════════════════════════════════════════════════════════════════════════
+
+COMPLETE STEP-BY-STEP EXAMPLE:
+────────────────────────────────────────────────────────────────────────────
+
+Your GitHub username: alice_smith
+
+Step 1: Run script
+  .\GITHUB_PUSH.ps1
+
+Step 2: Enter username when asked
+  alice_smith
+
+Step 3: Wait for command prompts
+  Press Enter when ready
+
+Step 4: You'll see commands execute
+  Command 1: & "C:\Program Files\Git\cmd\git.exe" branch -M main
+  Command 2: & "C:\Program Files\Git\cmd\git.exe" remote add origin https://github.com/alice_smith/edusmart-web.git
+  Command 3: & "C:\Program Files\Git\cmd\git.exe" push -u origin main
+
+Step 5: Enter credentials when asked
+  Username: alice_smith
+  Password: (paste your GitHub token)
+
+Step 6: See success message
+  ✅ Code pushed to GitHub!
+
+Step 7: Next step: Deploy to Render (see next file)
+
+═════════════════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+────────────────────────────────────────────────────────────────────────────
+
+Error: "Repository already exists"
+  → Run: & "C:\Program Files\Git\cmd\git.exe" remote remove origin
+  → Then run Command 2 again
+
+Error: "Authentication failed"
+  → Make sure you created a GitHub token (not just password)
+  → Go to: https://github.com/settings/tokens
+  → Create a new token with 'repo' checked
+
+Error: "Could not read Username"
+  → Click in the popup window first
+  → Type your username
+  → Press Tab
+  → Paste token
+  → Press Enter
+
+═════════════════════════════════════════════════════════════════════════════
+
+NEXT: After success, these are the RENDER deployment steps
+────────────────────────────────────────────────────────────────────────────
+
+1. Go to: https://dashboard.render.com
+2. Click "New +" (top right)
+3. Click "Web Service"
+4. Click "Connect a repository"
+5. Select: edusmart-web
+6. Fill in:
+   - Build Command: pip install -r requirements.txt
+   - Start Command: gunicorn -w 4 -b 0.0.0.0:$PORT app:web_app
+7. Click "Create Web Service"
+8. Wait 2-3 minutes
+9. Get your URL: https://edusmart-web.onrender.com
+
+═════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,92 @@
+═════════════════════════════════════════════════════════════════════════════
+           HOW TO REPLACE YOUR-USERNAME WITH YOUR GITHUB USERNAME
+═════════════════════════════════════════════════════════════════════════════
+
+SIMPLE VERSION: Let the script do it
+────────────────────────────────────────────────────────────────────────────
+
+Run this in PowerShell:
+  cd "C:\Users\Administrator\Desktop\EDUSMART SOLUTIONS\web_deployment"
+  .\GITHUB_PUSH.ps1
+
+It will:
+  1. Ask for your GitHub username
+  2. Generate all commands with your username
+  3. Run them automatically
+
+═════════════════════════════════════════════════════════════════════════════
+
+MANUAL VERSION: Do it yourself
+────────────────────────────────────────────────────────────────────────────
+
+STEP 1: Find your GitHub username
+  1. Go to: https://github.com
+  2. Click your profile picture (top right)
+  3. Your username is shown there
+  
+  Example: if you are "john_smith", that's your username
+
+STEP 2: Replace the placeholder in commands
+
+Original command:
+  & "C:\Program Files\Git\cmd\git.exe" remote add origin https://github.com/YOUR-USERNAME/edusmart-web.git
+
+Replace YOUR-USERNAME with your actual username, for example:
+  & "C:\Program Files\Git\cmd\git.exe" remote add origin https://github.com/john_smith/edusmart-web.git
+
+═════════════════════════════════════════════════════════════════════════════
+
+QUICK EXAMPLE
+────────────────────────────────────────────────────────────────────────────
+
+If your GitHub username is: alice123
+
+BEFORE (original command with placeholder):
+  https://github.com/YOUR-USERNAME/edusmart-web.git
+
+AFTER (replace YOUR-USERNAME):
+  https://github.com/alice123/edusmart-web.git
+
+═════════════════════════════════════════════════════════════════════════════
+
+AUTOMATIC: All Replacement Commands at Once
+────────────────────────────────────────────────────────────────────────────
+
+If your GitHub username is: YOUR-USERNAME
+
+Change to: your_actual_github_username
+
+Command 1: (stays the same)
+& "C:\Program Files\Git\cmd\git.exe" branch -M main
+
+Command 2: (replace YOUR-USERNAME)
+& "C:\Program Files\Git\cmd\git.exe" remote add origin https://github.com/YOUR-USERNAME/edusmart-web.git
+
+Command 3: (stays the same)
+& "C:\Program Files\Git\cmd\git.exe" push -u origin main
+
+═════════════════════════════════════════════════════════════════════════════
+
+EASIEST WAY:
+────────────────────────────────────────────────────────────────────────────
+
+1. Open PowerShell
+2. Run: .\GITHUB_PUSH.ps1
+3. When asked, enter your GitHub username
+4. Let it run automatically
+
+That's it! No manual editing needed.
+
+═════════════════════════════════════════════════════════════════════════════
+
+NEED HELP?
+
+Your GitHub username is at: https://github.com (top right corner)
+
+It's the short name you chose when signing up, like:
+  - john_doe
+  - alice_smith
+  - tech_master
+  (without @ or .com)
+
+═════════════════════════════════════════════════════════════════════════════
