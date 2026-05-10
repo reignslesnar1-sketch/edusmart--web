@@ -8,7 +8,7 @@ import os
 import sys
 import sqlite3
 import secrets
-import re
+import traceback
 
 # Ensure main module is importable
 sys.path.insert(0, os.path.dirname(__file__))
@@ -52,11 +52,7 @@ def ensure_tables():
         password_hash TEXT NOT NULL,
         teacher_name TEXT,
         mobile_number TEXT,
-        staff_number TEXT,
-        admission_num TEXT,
-        first_school TEXT,
-        village TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        staff_number TEXT
     )''')
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS students (
@@ -80,36 +76,22 @@ def ensure_tables():
         name TEXT UNIQUE
     )''')
     
-    cursor.execute('''CREATE TABLE IF NOT EXISTS subject_levels (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        subject_id INTEGER,
-        level TEXT,
-        grade INTEGER,
-        FOREIGN KEY(subject_id) REFERENCES subjects(id)
-    )''')
-    
     cursor.execute('''CREATE TABLE IF NOT EXISTS results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id INTEGER,
         subject_id INTEGER,
         exam_id INTEGER,
-        marks INTEGER,
-        FOREIGN KEY(student_id) REFERENCES students(id),
-        FOREIGN KEY(subject_id) REFERENCES subjects(id),
-        FOREIGN KEY(exam_id) REFERENCES exams(id)
+        marks INTEGER
     )''')
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS candidate_targets (
         student_id INTEGER,
         subject_id INTEGER,
         target INTEGER,
-        PRIMARY KEY(student_id, subject_id),
-        FOREIGN KEY(student_id) REFERENCES students(id),
-        FOREIGN KEY(subject_id) REFERENCES subjects(id)
+        PRIMARY KEY(student_id, subject_id)
     )''')
     
     conn.commit()
-    print("✓ Database tables ready")
 
 def verify_teacher_credentials(username, password):
     """Verify teacher login credentials."""
@@ -147,7 +129,7 @@ def get_teacher_info(username):
         cursor.execute("SELECT id, mobile_number, staff_number FROM teachers WHERE username = ?", (username,))
         row = cursor.fetchone()
         if row:
-            return {'id': row[0], 'mobile': row[1], 'staff_number': row[2]}
+            return {'id': row[0], 'mobile': row[1], 'staff_number': row[2] or 'N/A'}
         return None
     except Exception as e:
         print(f"Error getting teacher info: {e}")
@@ -162,33 +144,37 @@ def generate_teacher_username():
         if not cursor.fetchone():
             return username
 
-# ==================== LOAD TEMPLATES FROM MAIN FILE ====================
+# ==================== LOAD TEMPLATES ====================
 
 TEMPLATES = {}
 
-def load_templates_from_main_file():
-    """Extract all HTML templates from the main exam_system.py file."""
+def load_templates():
+    """Try to load templates from exam_system module."""
     global TEMPLATES
     try:
-        main_file = os.path.join(os.path.dirname(__file__), 'exam_system.py')
-        if not os.path.exists(main_file):
-            print("⚠ Main file (exam_system.py) not found - using placeholder templates")
-            return
+        # Try direct import first
+        import exam_system as exam_mod
         
-        with open(main_file, 'r', encoding='utf-8', errors='ignore') as f:
-            main_code = f.read()
+        # List of template names to try loading
+        template_names = [
+            'LOGIN_TEMPLATE', 'REGISTER_TEMPLATE', 'DASHBOARD_TEMPLATE',
+            'WELCOME_TEMPLATE', 'CHECK_RESULTS_TEMPLATE', 'STUDENTS_TEMPLATE',
+            'TEACHERS_TEMPLATE', 'FORGOT_PASSWORD_TEMPLATE', 'CANDIDATE_LOGIN_TEMPLATE',
+            'CANDIDATE_DASHBOARD_TEMPLATE', 'SIDEBAR_PAGE_TEMPLATE'
+        ]
         
-        # Extract all _TEMPLATE = """ ... """ assignments
-        pattern = r'(\w+_TEMPLATE) = """((?:[^"\\]|\\.)*?)"""'
+        for template_name in template_names:
+            if hasattr(exam_mod, template_name):
+                TEMPLATES[template_name] = getattr(exam_mod, template_name)
+                print(f"✓ Loaded: {template_name}")
         
-        for match in re.finditer(pattern, main_code, re.DOTALL):
-            template_name = match.group(1)
-            template_content = match.group(2)
-            TEMPLATES[template_name] = template_content
-            print(f"✓ Loaded: {template_name}")
-            
+        if TEMPLATES:
+            print(f"✓ Loaded {len(TEMPLATES)} templates from exam_system module")
+            return True
     except Exception as e:
-        print(f"⚠ Error loading templates: {e}")
+        print(f"⚠ Could not import exam_system module: {e}")
+    
+    return False
 
 # Create Flask app
 app = Flask(__name__, static_folder='.')
@@ -199,15 +185,84 @@ from urllib.parse import quote as url_quote
 app.jinja_env.filters['urlencode'] = lambda s: url_quote(str(s))
 
 # Initialize on startup
+print("=" * 60)
 print("Starting EDUSMART Web Server...")
+print("=" * 60)
 try:
     ensure_tables()
-    load_templates_from_main_file()
+    print("✓ Database tables ready")
+    
+    if load_templates():
+        print("✓ Templates loaded successfully")
+    else:
+        print("⚠ Templates not found - will use built-in fallbacks")
+    
     print("✓ EDUSMART Web Server initialized")
 except Exception as e:
     print(f"✗ Initialization error: {e}")
-    import traceback
     traceback.print_exc()
+
+# ==================== FALLBACK TEMPLATES ====================
+
+FALLBACK_LOGIN = '''
+<html>
+<head><title>Login - EDUSMART</title>
+<style>
+body { font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+.container { background: white; padding: 50px; border-radius: 10px; width: 100%; max-width: 400px; }
+h1 { text-align: center; color: #667eea; }
+input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+button:hover { opacity: 0.9; }
+.error { color: red; background: #ffe0e0; padding: 10px; border-radius: 5px; }
+.links { text-align: center; margin-top: 15px; }
+.links a { margin: 0 10px; color: #667eea; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎓 Teacher Login</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="POST">
+<input type="text" name="username" placeholder="Username" required>
+<input type="password" name="password" placeholder="Password" required>
+<button>Login</button>
+</form>
+<div class="links">
+<a href="/">Home</a> | <a href="/register">Register</a>
+</div>
+</div>
+</body>
+</html>
+'''
+
+FALLBACK_HOME = '''
+<html>
+<head><title>EDUSMART - Home</title>
+<style>
+body { font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 20px; min-height: 100vh; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 50px; border-radius: 15px; text-align: center; }
+h1 { color: #667eea; font-size: 2.5em; margin: 0; }
+p { color: #666; font-size: 1.2em; }
+.buttons { margin: 30px 0; }
+.btn { display: inline-block; padding: 15px 30px; margin: 10px; border-radius: 5px; text-decoration: none; font-weight: bold; cursor: pointer; }
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.btn-primary:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎓 EDUSMART SOLUTIONS</h1>
+<p>Online Exam Results Management System</p>
+<div class="buttons">
+<a href="/login" class="btn btn-primary">👨‍🏫 Teacher Login</a>
+<a href="/register" class="btn btn-primary">📝 Register</a>
+<a href="/check_results" class="btn btn-primary">📊 Check Results</a>
+</div>
+</div>
+</body>
+</html>
+'''
 
 # ==================== ROUTES ====================
 
@@ -217,12 +272,7 @@ def index():
     if 'username' in session:
         return redirect(url_for('dashboard'))
     
-    template = TEMPLATES.get('WELCOME_TEMPLATE', '''
-    <html><head><title>EDUSMART</title></head><body>
-    <h1>Welcome to EDUSMART</h1>
-    <p><a href="/login">Teacher Login</a> | <a href="/check_results">Check Results</a></p>
-    </body></html>''')
-    
+    template = TEMPLATES.get('WELCOME_TEMPLATE', FALLBACK_HOME)
     return render_template_string(template, request=request)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -243,22 +293,14 @@ def login():
                     session['teacher_id'] = teacher_info['id']
                     session['mobile_number'] = teacher_info['mobile']
                     session['staff_number'] = teacher_info['staff_number']
+                print(f"✓ Teacher {username} logged in")
                 return redirect(url_for('dashboard'))
             else:
                 error = "Invalid username or password"
         else:
             error = "Please enter username and password"
     
-    template = TEMPLATES.get('LOGIN_TEMPLATE', '''
-    <html><head><title>Login</title></head><body>
-    {% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button>Login</button>
-    </form>
-    </body></html>''')
-    
+    template = TEMPLATES.get('LOGIN_TEMPLATE', FALLBACK_LOGIN)
     return render_template_string(template, error=error)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -279,7 +321,7 @@ def register():
             if not teacher_name or not mobile_number or not password or not confirm_password:
                 message = '❌ Please fill all required fields'
             elif len(mobile_number) < 10:
-                message = '❌ Mobile number too short'
+                message = '❌ Mobile number too short (min 10 digits)'
             elif password != confirm_password:
                 message = '❌ Passwords do not match'
             elif len(password) < 6:
@@ -288,26 +330,42 @@ def register():
                 generated_username = generate_teacher_username()
                 if save_teacher_credentials(generated_username, password, teacher_name, mobile_number, staff_number or None):
                     success = True
-                    message = f'✓ Success! Your username: {generated_username}'
+                    message = f'✓ Account created! Username: <b>{generated_username}</b>'
+                    print(f"✓ New teacher registered: {generated_username}")
                 else:
-                    message = '❌ Failed to create account'
+                    message = '❌ Failed to create account - username may exist'
         except Exception as e:
             message = f'❌ Error: {str(e)}'
-            import traceback
             traceback.print_exc()
     
     template = TEMPLATES.get('REGISTER_TEMPLATE', '''
-    <html><head><title>Register</title></head><body>
-    {% if message %}<p>{{ message }}</p>{% endif %}
+    <html>
+    <head><title>Register - EDUSMART</title>
+    <style>
+    body { font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+    .container { background: white; padding: 50px; border-radius: 10px; width: 100%; max-width: 400px; }
+    h1 { text-align: center; color: #667eea; }
+    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+    button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .msg { padding: 15px; border-radius: 5px; margin: 10px 0; background: #e0ffe0; color: #27ae60; }
+    </style>
+    </head>
+    <body>
+    <div class="container">
+    <h1>📝 Register</h1>
+    {% if message %}<div class="msg">{{ message|safe }}</div>{% endif %}
     <form method="POST">
-        <input type="text" name="teacher_name" placeholder="Teacher Name" required>
-        <input type="tel" name="mobile_number" placeholder="Mobile Number" required>
-        <input type="text" name="staff_number" placeholder="Staff Number (optional)">
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-        <button>Register</button>
+    <input type="text" name="teacher_name" placeholder="Teacher Name" required>
+    <input type="tel" name="mobile_number" placeholder="Mobile Number" required>
+    <input type="text" name="staff_number" placeholder="Staff Number (optional)">
+    <input type="password" name="password" placeholder="Password" required>
+    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+    <button>Create Account</button>
     </form>
-    </body></html>''')
+    </div>
+    </body>
+    </html>
+    ''')
     
     return render_template_string(template, message=message, success=success, generated_username=generated_username)
 
@@ -326,20 +384,42 @@ def dashboard():
         stats['total_exams'] = cursor.fetchone()[0]
         cursor.execute("SELECT COUNT(*) FROM subjects")
         stats['total_subjects'] = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(DISTINCT grade) FROM students")
-        stats['total_classes'] = cursor.fetchone()[0]
-    except Exception as e:
-        print(f"Error loading stats: {e}")
+    except:
+        pass
     
     teacher_name = session.get('teacher_name', session.get('username', 'Teacher'))
     
     template = TEMPLATES.get('DASHBOARD_TEMPLATE', '''
-    <html><head><title>Dashboard</title></head><body>
-    <h1>Dashboard</h1>
-    <p>Welcome, {{ teacher_name }}!</p>
-    <p>Students: {{ total_students }} | Exams: {{ total_exams }} | Subjects: {{ total_subjects }} | Classes: {{ total_classes }}</p>
-    <a href="/logout">Logout</a>
-    </body></html>''')
+    <html>
+    <head><title>Dashboard - EDUSMART</title>
+    <style>
+    body { font-family: Arial; background: #f5f5f5; margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+    .header { display: flex; justify-content: space-between; align-items: center; }
+    h1 { color: #667eea; margin: 0; }
+    .logout { background: #e74c3c; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+    .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-card h3 { margin: 0 0 10px 0; font-size: 1.2em; }
+    .stat-card .number { font-size: 2em; font-weight: bold; }
+    </style>
+    </head>
+    <body>
+    <div class="container">
+    <div class="header">
+    <div><h1>📊 Dashboard</h1><p>Welcome, {{ teacher_name }}!</p></div>
+    <a href="/logout" class="logout">Logout</a>
+    </div>
+    <div class="stats">
+    <div class="stat-card"><h3>Students</h3><div class="number">{{ total_students }}</div></div>
+    <div class="stat-card"><h3>Exams</h3><div class="number">{{ total_exams }}</div></div>
+    <div class="stat-card"><h3>Subjects</h3><div class="number">{{ total_subjects }}</div></div>
+    <div class="stat-card"><h3>Classes</h3><div class="number">{{ total_classes }}</div></div>
+    </div>
+    </div>
+    </body>
+    </html>
+    ''')
     
     return render_template_string(template, 
         username=session['username'],
@@ -352,6 +432,7 @@ def dashboard():
 @app.route('/logout')
 def logout():
     """Logout."""
+    print(f"✓ User {session.get('username')} logged out")
     session.clear()
     return redirect(url_for('login'))
 
@@ -359,14 +440,32 @@ def logout():
 def check_results():
     """Public page for checking exam results."""
     template = TEMPLATES.get('CHECK_RESULTS_TEMPLATE', '''
-    <html><head><title>Check Results</title></head><body>
-    <h1>Check Your Results</h1>
+    <html>
+    <head><title>Check Results - EDUSMART</title>
+    <style>
+    body { font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+    .container { background: white; padding: 40px; border-radius: 10px; width: 100%; max-width: 500px; }
+    h1 { text-align: center; color: #667eea; }
+    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+    button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .home-link { text-align: center; margin-top: 20px; }
+    .home-link a { color: #667eea; text-decoration: none; }
+    </style>
+    </head>
+    <body>
+    <div class="container">
+    <h1>📊 Check Results</h1>
+    <p style="text-align: center;">Enter your details to view exam results</p>
     <form method="POST">
-        <input type="text" name="admission_number" placeholder="Admission Number" required>
-        <input type="text" name="student_name" placeholder="Student Name" required>
-        <button>Search</button>
+    <input type="text" name="admission_number" placeholder="Admission Number" required>
+    <input type="text" name="student_name" placeholder="Student Name" required>
+    <button>Search Results</button>
     </form>
-    </body></html>''')
+    <div class="home-link"><a href="/">← Back Home</a></div>
+    </div>
+    </body>
+    </html>
+    ''')
     
     return render_template_string(template)
 
@@ -377,13 +476,7 @@ def students_page():
         return redirect(url_for('login'))
     
     grades = list(range(1, 10))
-    template = TEMPLATES.get('STUDENTS_TEMPLATE', '''
-    <html><head><title>Students</title></head><body>
-    <h1>Students Management</h1>
-    <p>Available grades: {{ grades }}</p>
-    </body></html>''')
-    
-    return render_template_string(template, grades=grades)
+    return render_template_string('<h1>Students Management</h1><p>Grades: ' + str(grades) + '</p>')
 
 @app.route('/teachers')
 def teachers_page():
@@ -394,32 +487,34 @@ def teachers_page():
     teachers = []
     try:
         conn, cursor = get_db_connection()
-        cursor.execute("SELECT id, username, teacher_name, mobile_number, staff_number FROM teachers ORDER BY created_at DESC")
-        teachers = [{'id': row[0], 'username': row[1], 'name': row[2], 'mobile': row[3], 'staff': row[4]} for row in cursor.fetchall()]
-    except Exception as e:
-        print(f"Error loading teachers: {e}")
+        cursor.execute("SELECT id, username, teacher_name, mobile_number FROM teachers ORDER BY id DESC")
+        teachers = [{'id': r[0], 'username': r[1], 'name': r[2], 'mobile': r[3]} for r in cursor.fetchall()]
+    except:
+        pass
     
-    template = TEMPLATES.get('TEACHERS_TEMPLATE', '''
-    <html><head><title>Teachers</title></head><body>
-    <h1>Teachers Management</h1>
-    <p>Total: {{ total_teachers }}</p>
-    </body></html>''')
-    
-    return render_template_string(template, teachers=teachers, total_teachers=len(teachers))
+    return render_template_string('<h1>Teachers (' + str(len(teachers)) + ')</h1>')
 
 @app.errorhandler(500)
 def error_500(e):
     """Handle 500 errors."""
-    print(f"Error 500: {e}")
-    import traceback
+    print(f"500 Error: {e}")
     traceback.print_exc()
-    return "Server Error", 500
+    return '''<html><body style="font-family:Arial; padding:20px;">
+    <h1>❌ Server Error</h1>
+    <p>Something went wrong. Please try again.</p>
+    <a href="/">← Home</a>
+    </body></html>''', 500
 
 @app.errorhandler(404)
 def error_404(e):
     """Handle 404 errors."""
-    return "Page Not Found", 404
+    return '''<html><body style="font-family:Arial; padding:20px;">
+    <h1>❌ Page Not Found</h1>
+    <a href="/">← Home</a>
+    </body></html>''', 404
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    print(f"Starting web server on port {port}...")
     app.run(host='0.0.0.0', port=port, debug=False)
+
