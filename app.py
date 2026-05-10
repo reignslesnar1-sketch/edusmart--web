@@ -14,11 +14,14 @@ import json
 from datetime import datetime
 
 # Initialize Flask App
-web_app = Flask(__name__, static_folder='.')
-web_app.secret_key = secrets.token_hex(16)
+app = Flask(__name__, static_folder='.')
+app.secret_key = secrets.token_hex(16)
 
 # Add URL encoding filter to Jinja2 environment
-web_app.jinja_env.filters['urlencode'] = lambda s: url_quote(str(s))
+app.jinja_env.filters['urlencode'] = lambda s: url_quote(str(s))
+
+# Alias for backward compatibility
+web_app = app
 
 # ==================== DATABASE CONFIG ====================
 # Use DATABASE_URL from Render environment, or SQLite for local development
@@ -221,7 +224,7 @@ def generate_teacher_username():
 
 # ==================== ROUTES ====================
 
-@web_app.route('/')
+@app.route('/')
 def index():
     """Home/Welcome page"""
     if 'username' in session:
@@ -367,7 +370,7 @@ def index():
     """
     return render_template_string(welcome_html)
 
-@web_app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     """Teacher login"""
     if request.method == 'POST':
@@ -385,7 +388,7 @@ def login():
     
     return render_template_string(LOGIN_TEMPLATE)
 
-@web_app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     """Teacher registration"""
     message = None
@@ -413,7 +416,7 @@ def register():
     
     return render_template_string(REGISTER_TEMPLATE, message=message, success=success)
 
-@web_app.route('/dashboard')
+@app.route('/dashboard')
 def dashboard():
     """Teacher dashboard"""
     if 'username' not in session:
@@ -482,13 +485,13 @@ def dashboard():
     
     return render_template_string(dashboard_html)
 
-@web_app.route('/logout')
+@app.route('/logout')
 def logout():
     """Logout"""
     session.clear()
     return redirect(url_for('index'))
 
-@web_app.route('/check_results', methods=['GET', 'POST'])
+@app.route('/check_results', methods=['GET', 'POST'])
 def check_results():
     """Student results page"""
     results = None
@@ -722,4 +725,4 @@ if __name__ != '__main__':
 if __name__ == '__main__':
     # For local development
     ensure_tables()
-    web_app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
