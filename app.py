@@ -20,16 +20,32 @@ except ImportError:
     print("ERROR: Flask not installed")
     sys.exit(1)
 
-# Try to import exam_system module to get all the code
-print("Loading EDUSMART system...")
+# Try to import templates - they should be in templates.py (no tkinter dependency)
+print("Loading templates...")
 try:
-    # Import the main module - this has all templates and functions
-    import exam_system
-    print("✓ Loaded exam_system module")
-    HAS_EXAM_MODULE = True
-except ImportError as e:
-    print(f"⚠ Could not import exam_system: {e}")
-    HAS_EXAM_MODULE = False
+    # Try to import from templates module first
+    import templates as template_module
+    print("✓ Loaded templates module")
+    HAS_TEMPLATES_MODULE = True
+except ImportError:
+    print("⚠ templates.py not found, trying exam_system with tkinter workaround...")
+    try:
+        # Suppress tkinter import errors - we only need the template strings
+        import sys
+        
+        # Mock tkinter before importing exam_system
+        class MockTk:
+            pass
+        sys.modules['tkinter'] = MockTk()
+        sys.modules['_tkinter'] = MockTk()
+        
+        # Now import exam_system
+        import exam_system as template_module
+        print("✓ Loaded exam_system module (tkinter mocked)")
+        HAS_TEMPLATES_MODULE = True
+    except Exception as e:
+        print(f"⚠ Could not load exam_system either: {e}")
+        HAS_TEMPLATES_MODULE = False
 
 # Database configuration
 DB_FILE = os.path.join(os.path.dirname(__file__), 'exam_system.db')
@@ -157,7 +173,7 @@ def generate_teacher_username():
 
 TEMPLATES = {}
 
-if HAS_EXAM_MODULE:
+if HAS_TEMPLATES_MODULE:
     # List of all template names from your system
     template_names = [
         'LOGIN_TEMPLATE', 'REGISTER_TEMPLATE', 'DASHBOARD_TEMPLATE',
@@ -169,8 +185,8 @@ if HAS_EXAM_MODULE:
     
     for template_name in template_names:
         try:
-            if hasattr(exam_system, template_name):
-                template_content = getattr(exam_system, template_name)
+            if hasattr(template_module, template_name):
+                template_content = getattr(template_module, template_name)
                 TEMPLATES[template_name] = template_content
                 print(f"  ✓ {template_name}")
         except Exception as e:
