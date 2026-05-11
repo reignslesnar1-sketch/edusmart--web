@@ -23,29 +23,13 @@ except ImportError:
 # Try to import templates - they should be in templates.py (no tkinter dependency)
 print("Loading templates...")
 try:
-    # Try to import from templates module first
+    # Import the templates file - this has ONLY HTML templates, no GUI
     import templates as template_module
     print("✓ Loaded templates module")
     HAS_TEMPLATES_MODULE = True
-except ImportError:
-    print("⚠ templates.py not found, trying exam_system with tkinter workaround...")
-    try:
-        # Suppress tkinter import errors - we only need the template strings
-        import sys
-        
-        # Mock tkinter before importing exam_system
-        class MockTk:
-            pass
-        sys.modules['tkinter'] = MockTk()
-        sys.modules['_tkinter'] = MockTk()
-        
-        # Now import exam_system
-        import exam_system as template_module
-        print("✓ Loaded exam_system module (tkinter mocked)")
-        HAS_TEMPLATES_MODULE = True
-    except Exception as e:
-        print(f"⚠ Could not load exam_system either: {e}")
-        HAS_TEMPLATES_MODULE = False
+except ImportError as e:
+    print(f"⚠ Could not import templates: {e}")
+    HAS_TEMPLATES_MODULE = False
 
 # Database configuration
 DB_FILE = os.path.join(os.path.dirname(__file__), 'exam_system.db')
@@ -196,23 +180,30 @@ print(f"✓ Loaded {len(TEMPLATES)} templates")
 
 # ==================== CREATE FLASK APP ====================
 
-app = Flask(__name__, static_folder='.')
-app.secret_key = secrets.token_hex(16)
-
-# Add URL encoding filter
-from urllib.parse import quote as url_quote
-app.jinja_env.filters['urlencode'] = lambda s: url_quote(str(s))
-
-# Initialize database
-print("Initializing database...")
 try:
+    print("Creating Flask app...")
+    app = Flask(__name__, static_folder='.')
+    app.secret_key = secrets.token_hex(16)
+    print("✓ Flask app created")
+
+    # Add URL encoding filter
+    print("Adding URL encoding filter...")
+    from urllib.parse import quote as url_quote
+    app.jinja_env.filters['urlencode'] = lambda s: url_quote(str(s))
+    print("✓ URL filter added")
+
+    # Initialize database
+    print("Initializing database...")
     ensure_tables()
     print("✓ Database ready")
-except Exception as e:
-    print(f"✗ Database error: {e}")
+    
+    print("✓ EDUSMART Web Server ready")
+    print("=" * 60)
 
-print("✓ EDUSMART Web Server ready")
-print("=" * 60)
+except Exception as e:
+    print(f"✗ STARTUP ERROR: {e}")
+    print(f"✗ Traceback: {traceback.format_exc()}")
+    raise
 
 # ==================== ROUTES ==================== 
 
