@@ -4,28 +4,35 @@ EDUSMART - Online Exam Results Management System (Deployed)
 This app imports and uses the EXACT website from the main exam_system.py
 """
 
+print("[STARTUP] Python app starting...")
+
 import os
 import sys
 import sqlite3
 import secrets
 import traceback
 
+print(f"[STARTUP] Python version: {sys.version.split()[0]}")
+print("[STARTUP] Core imports successful")
+
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(__file__))
 
 # Import Flask
+print("[STARTUP] Importing Flask...")
 try:
     from flask import Flask, render_template_string, request, redirect, url_for, session
-except ImportError:
-    print("ERROR: Flask not installed")
+    print("[STARTUP] Flask imported successfully")
+except ImportError as e:
+    print(f"[STARTUP] ERROR: Flask not installed: {e}")
     sys.exit(1)
 
 # Try to import templates - they should be in templates.py (no tkinter dependency)
-print("Loading templates...")
+print("[STARTUP] Loading templates module...")
 try:
     # Import the templates file - this has ONLY HTML templates, no GUI
     import templates as template_module
-    print("✓ Loaded templates module")
+    print("[STARTUP] ✓ Loaded templates module")
     HAS_TEMPLATES_MODULE = True
 except ImportError as e:
     print(f"⚠ Could not import templates: {e}")
