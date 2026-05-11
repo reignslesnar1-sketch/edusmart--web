@@ -31,8 +31,14 @@ except ImportError as e:
     print(f"⚠ Could not import templates: {e}")
     HAS_TEMPLATES_MODULE = False
 
-# Database configuration
-DB_FILE = os.path.join(os.path.dirname(__file__), 'exam_system.db')
+# Database configuration - use /tmp on servers, local folder on dev
+import tempfile
+if os.path.exists('/tmp'):
+    # Server environment (Render, Linux)
+    DB_FILE = '/tmp/exam_system.db'
+else:
+    # Local development (Windows)
+    DB_FILE = os.path.join(os.path.dirname(__file__), 'exam_system.db')
 
 # Global database connection
 web_conn = None
