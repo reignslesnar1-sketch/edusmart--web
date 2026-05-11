@@ -1,0 +1,58 @@
+🚀 EDUSMART DEPLOYMENT - GIT INSTALLATION REQUIRED
+
+Git is NOT installed on your system. Follow these steps:
+
+════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Download Git
+  Go to: https://git-scm.com/download/win
+  Click the "Click here to download" button (or the green button)
+
+STEP 2: Run Installer
+  Find the downloaded file (usually in Downloads folder)
+  Double-click: Git-2.x.x-64-bit.exe
+  
+STEP 3: Installation Settings (Use Defaults)
+  Click "Next" through all screens
+  Use the default options (don't change anything)
+  Make sure to check: "Git Bash Here" and "Git GUI Here"
+  
+STEP 4: Complete Installation
+  Click "Install"
+  Wait for installation to finish
+  Click "Finish"
+
+STEP 5: Restart PowerShell
+  Close the PowerShell window completely
+  Open PowerShell again (search for "PowerShell")
+  
+STEP 6: Run Setup Again
+  
+  cd "C:\Users\Administrator\Desktop\EDUSMART SOLUTIONS\web_deployment"
+  
+  .\SETUP-SIMPLE.ps1
+
+════════════════════════════════════════════════════════════════════════════
+
+ALTERNATIVE: If you can't install Git
+
+Use this command file instead:
+
+  C:\Users\Administrator\Desktop\EDUSMART SOLUTIONS\web_deployment\SETUP.bat
+
+  (Just double-click it)
+
+════════════════════════════════════════════════════════════════════════════
+
+Questions?
+  1. Make sure to download from official site: git-scm.com
+  2. Use all default installation settings
+  3. Restart PowerShell after installation
+  4. Run the setup script again
+
+════════════════════════════════════════════════════════════════════════════
+
+Once Git is installed, you can:
+  ✓ Push code to GitHub
+  ✓ Deploy to Render
+  ✓ Keep your app updated
