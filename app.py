@@ -1012,7 +1012,7 @@ def students_page():
             <div class="footer">
                 <a href="/dashboard" class="btn-primary">← Back to Dashboard</a>
                 <a href="/api/students" class="btn-primary" style="background: #764ba2;">📥 Export as JSON</a>
-                <span style="color: #999; font-size: 0.9em;">Updated: {% now "utc", "%Y-%m-%d %H:%M:%S" %}</span>
+                <span style="color: #999; font-size: 0.9em;">Students System Active</span>
             </div>
         </div>
         
