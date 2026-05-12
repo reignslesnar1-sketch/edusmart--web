@@ -1114,6 +1114,7 @@ def api_students():
         }, 500
 
 @app.route('/teachers')
+def teachers_page():
     """Teachers management page with enhanced data."""
     if 'username' not in session:
         return redirect(url_for('login'))
