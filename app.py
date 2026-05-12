@@ -11,14 +11,58 @@ import sys
 import sqlite3
 import secrets
 import traceback
+import requests
+import json
 
 print(f"[STARTUP] Python version: {sys.version.split()[0]}")
 print("[STARTUP] Core imports successful")
 
-# Add current directory to path
-sys.path.insert(0, os.path.dirname(__file__))
+# ==================== BACKEND CONFIGURATION ====================
+# ngrok URL pointing to local exam management system
+# Can be set via environment variable for easy deployment
+BACKEND_URL = os.environ.get('BACKEND_URL', 'https://facility-zap-amusable.ngrok-free.dev')
+print(f"[STARTUP] Backend URL configured: {BACKEND_URL}")
+print(f"[STARTUP] Backend URL source: {'environment variable' if os.environ.get('BACKEND_URL') else 'hardcoded default'}")
 
-# Import Flask
+# ==================== BACKEND API HELPERS ====================
+
+def call_backend(endpoint, method='GET', data=None):
+    """Call backend API via ngrok tunnel."""
+    try:
+        url = f"{BACKEND_URL}{endpoint}"
+        headers = {'Content-Type': 'application/json'}
+        
+        if method == 'GET':
+            response = requests.get(url, headers=headers, timeout=10)
+        elif method == 'POST':
+            response = requests.post(url, json=data, headers=headers, timeout=10)
+        else:
+            return None
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Backend error: {response.status_code} - {response.text}")
+            return None
+    except requests.exceptions.Timeout:
+        print(f"Backend timeout on {endpoint}")
+        return None
+    except requests.exceptions.ConnectionError:
+        print(f"Cannot connect to backend at {BACKEND_URL}")
+        return None
+    except Exception as e:
+        print(f"Backend error: {e}")
+        return None
+
+def get_backend_students():
+    """Get students from backend."""
+    return call_backend('/api/students')
+
+def get_backend_stats():
+    """Get system statistics from backend."""
+    return call_backend('/api/stats')
+
+# ==================== DATABASE FUNCTIONS ====================
 print("[STARTUP] Importing Flask...")
 try:
     from flask import Flask, render_template_string, request, redirect, url_for, session
@@ -359,16 +403,35 @@ def dashboard():
         return redirect(url_for('login'))
     
     stats = {'total_students': 0, 'total_exams': 0, 'total_subjects': 0, 'total_classes': 0}
+    
     try:
-        conn, cursor = get_db_connection()
-        cursor.execute("SELECT COUNT(*) FROM students")
-        stats['total_students'] = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM exams")
-        stats['total_exams'] = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM subjects")
-        stats['total_subjects'] = cursor.fetchone()[0]
-    except:
-        pass
+        # Try to fetch stats from backend first
+        backend_stats = get_backend_stats()
+        if backend_stats and backend_stats.get('success'):
+            stats = {
+                'total_students': backend_stats.get('total_students', 0),
+                'total_exams': backend_stats.get('total_exams', 0),
+                'total_subjects': backend_stats.get('total_subjects', 0),
+                'total_classes': backend_stats.get('total_classes', 0)
+            }
+            print("[DASHBOARD] Stats fetched from backend")
+        else:
+            print("[DASHBOARD] Backend stats unavailable, using local database")
+            raise Exception("Backend stats not available")
+    except Exception as e:
+        print(f"[DASHBOARD] Backend error: {e}, falling back to database")
+        
+        # Fallback: query local database
+        try:
+            conn, cursor = get_db_connection()
+            cursor.execute("SELECT COUNT(*) FROM students")
+            stats['total_students'] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM exams")
+            stats['total_exams'] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM subjects")
+            stats['total_subjects'] = cursor.fetchone()[0]
+        except:
+            pass
     
     teacher_name = session.get('teacher_name', session.get('username', 'Teacher'))
     
@@ -738,42 +801,60 @@ def candidate_dashboard():
 
 @app.route('/students')
 def students_page():
-    """Students management page with enhanced data."""
+    """Students management page with enhanced data.
+    Fetches data from backend via ngrok, falls back to local database."""
     if 'username' not in session:
         return redirect(url_for('login'))
     
     students = []
     total_students = 0
     grades = list(range(1, 13))  # Grades 1-12
+    data_source = 'unknown'
     
     try:
-        conn, cursor = get_db_connection()
-        
-        # Get total count
-        cursor.execute("SELECT COUNT(*) FROM students")
-        total_students = cursor.fetchone()[0]
-        
-        # Get all students sorted by grade
-        cursor.execute("""
-            SELECT id, student_name, admission_number, grade, stream, parent_phone 
-            FROM students 
-            ORDER BY grade, student_name
-        """)
-        
-        students = [
-            {
-                'id': r[0],
-                'student_name': r[1],
-                'admission_number': r[2],
-                'grade': r[3],
-                'stream': r[4],
-                'parent_phone': r[5]
-            }
-            for r in cursor.fetchall()
-        ]
+        # Try to fetch from backend first
+        backend_data = get_backend_students()
+        if backend_data and backend_data.get('success'):
+            students = backend_data.get('students', [])
+            total_students = backend_data.get('total_students', 0)
+            data_source = 'backend (ngrok)'
+            print(f"[STUDENTS] Fetched {total_students} students from backend")
+        else:
+            print("[STUDENTS] Backend unavailable, using local database")
+            raise Exception("Backend not available")
     except Exception as e:
-        print(f"Error fetching students: {e}")
-        pass
+        print(f"[STUDENTS] Backend error: {e}, falling back to database")
+        
+        # Fallback: query local database
+        try:
+            conn, cursor = get_db_connection()
+            
+            # Get total count
+            cursor.execute("SELECT COUNT(*) FROM students")
+            total_students = cursor.fetchone()[0]
+            
+            # Get all students sorted by grade
+            cursor.execute("""
+                SELECT id, student_name, admission_number, grade, stream, parent_phone 
+                FROM students 
+                ORDER BY grade, student_name
+            """)
+            
+            students = [
+                {
+                    'id': r[0],
+                    'student_name': r[1],
+                    'admission_number': r[2],
+                    'grade': r[3],
+                    'stream': r[4],
+                    'parent_phone': r[5]
+                }
+                for r in cursor.fetchall()
+            ]
+            data_source = 'local_database'
+        except Exception as db_error:
+            print(f"Error fetching students from database: {db_error}")
+            pass
     
     # Enhanced HTML template for all students
     enhanced_template = '''
@@ -1073,9 +1154,22 @@ def students_page():
 
 @app.route('/api/students')
 def api_students():
-    """API endpoint to get all registered students as JSON."""
+    """API endpoint to get all registered students as JSON.
+    First tries to fetch from backend via ngrok, falls back to local database."""
     import json
     
+    try:
+        # Try to fetch from backend first
+        backend_data = get_backend_students()
+        if backend_data:
+            print("[API] Students data fetched from backend successfully")
+            return backend_data
+        
+        print("[API] Backend unavailable, falling back to local database")
+    except Exception as e:
+        print(f"[API] Backend call error: {e}")
+    
+    # Fallback: query local database
     try:
         conn, cursor = get_db_connection()
         
@@ -1112,7 +1206,8 @@ def api_students():
             'metadata': {
                 'school': 'KANGA SCHOOL',
                 'system': 'EDUSMART',
-                'github_username': 'reignslesnar1-sketch'
+                'github_username': 'reignslesnar1-sketch',
+                'data_source': 'local_database'
             }
         }
     except Exception as e:
