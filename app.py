@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 """
-EDUSMART - Online Exam Results Management System (Deployed)
-This app imports and uses the EXACT website from the main exam_system.py
+EDUSMART - Render Web Server (Reverse Proxy)
+This app forwards all requests to the local exam management system via ngrok tunnel.
+Teachers can access the full EDUSMART interface through this Render website.
 """
 
 print("[STARTUP] Python app starting...")
 
 import os
 import sys
-import sqlite3
-import secrets
-import traceback
 import requests
-import json
+from flask import Flask, request, render_template_string
+from urllib.parse import urljoin
 
 print(f"[STARTUP] Python version: {sys.version.split()[0]}")
-print("[STARTUP] Core imports successful")
 
 # ==================== BACKEND CONFIGURATION ====================
 # ngrok URL pointing to local exam management system
@@ -24,43 +22,176 @@ BACKEND_URL = os.environ.get('BACKEND_URL', 'https://facility-zap-amusable.ngrok
 print(f"[STARTUP] Backend URL configured: {BACKEND_URL}")
 print(f"[STARTUP] Backend URL source: {'environment variable' if os.environ.get('BACKEND_URL') else 'hardcoded default'}")
 
-# ==================== BACKEND API HELPERS ====================
+# ==================== FLASK APP SETUP ====================
+try:
+    app = Flask(__name__, static_folder='.')
+    app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+    print(f"✓ Flask app created")
+except Exception as e:
+    print(f"✗ Failed to create Flask app: {e}")
+    sys.exit(1)
 
-def call_backend(endpoint, method='GET', data=None):
-    """Call backend API via ngrok tunnel."""
+# ==================== REVERSE PROXY HELPER ====================
+def forward_request(path_and_query=''):
+    """Forward the request to the backend system via ngrok tunnel."""
     try:
-        url = f"{BACKEND_URL}{endpoint}"
-        headers = {'Content-Type': 'application/json'}
+        # Build the backend URL
+        backend_endpoint = urljoin(BACKEND_URL, f"/{path_and_query.lstrip('/')}")
         
-        if method == 'GET':
-            response = requests.get(url, headers=headers, timeout=10)
-        elif method == 'POST':
-            response = requests.post(url, json=data, headers=headers, timeout=10)
-        else:
-            return None
+        print(f"[PROXY] Forwarding {request.method} {request.path} → {backend_endpoint}")
         
-        if response.status_code == 200:
-            return response.json()
+        # Prepare headers (exclude problematic ones)
+        headers = {key: value for key, value in request.headers if key.lower() not in [
+            'host', 'connection', 'content-length'
+        ]}
+        headers['X-Forwarded-For'] = request.remote_addr
+        headers['X-Forwarded-Proto'] = request.scheme
+        
+        # Handle different request methods
+        if request.method == 'GET':
+            response = requests.get(
+                backend_endpoint,
+                headers=headers,
+                params=request.args,
+                cookies=request.cookies,
+                timeout=30,
+                allow_redirects=False
+            )
+        elif request.method == 'POST':
+            # Get form data or JSON
+            if request.content_type and 'application/json' in request.content_type:
+                data = request.get_json()
+            else:
+                data = request.form
+            
+            response = requests.post(
+                backend_endpoint,
+                headers=headers,
+                data=data if isinstance(data, dict) else request.get_data(),
+                files=request.files if request.files else None,
+                cookies=request.cookies,
+                timeout=30,
+                allow_redirects=False
+            )
+        elif request.method == 'PUT':
+            response = requests.put(
+                backend_endpoint,
+                headers=headers,
+                data=request.get_data(),
+                cookies=request.cookies,
+                timeout=30,
+                allow_redirects=False
+            )
+        elif request.method == 'DELETE':
+            response = requests.delete(
+                backend_endpoint,
+                headers=headers,
+                cookies=request.cookies,
+                timeout=30,
+                allow_redirects=False
+            )
         else:
-            print(f"Backend error: {response.status_code} - {response.text}")
-            return None
+            return {'error': 'Method not supported'}, 405
+        
+        # Build response
+        response_headers = {}
+        for key, value in response.headers.items():
+            if key.lower() not in ['content-encoding', 'content-length', 'transfer-encoding']:
+                response_headers[key] = value
+        
+        print(f"[PROXY] Backend responded: {response.status_code}")
+        return response.content, response.status_code, response_headers
+        
     except requests.exceptions.Timeout:
-        print(f"Backend timeout on {endpoint}")
-        return None
-    except requests.exceptions.ConnectionError:
-        print(f"Cannot connect to backend at {BACKEND_URL}")
-        return None
+        print(f"[PROXY] Backend timeout")
+        return render_template_string('''
+        <html>
+        <head><title>Backend Timeout</title></head>
+        <body style="font-family: Arial; padding: 50px; background: #f6f8fa;">
+        <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; text-align: center;">
+        <h1>⏱️ Backend Timeout</h1>
+        <p>The local exam system is not responding. Make sure it's running with:</p>
+        <code style="background: #f0f0f0; padding: 15px; display: block; border-radius: 5px; margin: 10px 0;">
+        python "exam management system 2.py" --web-only
+        </code>
+        <p>And ngrok tunnel is active with:</p>
+        <code style="background: #f0f0f0; padding: 15px; display: block; border-radius: 5px; margin: 10px 0;">
+        .\ngrok.exe http 5000
+        </code>
+        </div>
+        </body>
+        </html>
+        '''), 504
+    
+    except requests.exceptions.ConnectionError as e:
+        print(f"[PROXY] Backend connection error: {e}")
+        return render_template_string('''
+        <html>
+        <head><title>Backend Unavailable</title></head>
+        <body style="font-family: Arial; padding: 50px; background: #f6f8fa;">
+        <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; text-align: center;">
+        <h1>🔴 Backend Unavailable</h1>
+        <p style="color: #e74c3c; font-weight: bold;">Cannot connect to: ''' + BACKEND_URL + '''</p>
+        <p>The local exam system or ngrok tunnel is not running.</p>
+        <h3>To fix this:</h3>
+        <p><strong>Step 1:</strong> Start exam system (PowerShell Window 1)</p>
+        <code style="background: #f0f0f0; padding: 15px; display: block; border-radius: 5px; margin: 10px 0;">
+        cd "c:\\Users\\Administrator\\Desktop\\EDUSMART SOLUTIONS\\claude"<br>
+        python "exam management system 2.py" --web-only
+        </code>
+        <p><strong>Step 2:</strong> Start ngrok tunnel (PowerShell Window 2)</p>
+        <code style="background: #f0f0f0; padding: 15px; display: block; border-radius: 5px; margin: 10px 0;">
+        cd C:\\Users\\Administrator\\Downloads<br>
+        .\\ngrok.exe http 5000
+        </code>
+        </div>
+        </body>
+        </html>
+        '''), 503
+    
     except Exception as e:
-        print(f"Backend error: {e}")
-        return None
+        print(f"[PROXY] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'error': f'Proxy error: {str(e)}'}, 502
 
-def get_backend_students():
-    """Get students from backend."""
-    return call_backend('/api/students')
+# ==================== ROUTES ====================
 
-def get_backend_stats():
-    """Get system statistics from backend."""
-    return call_backend('/api/stats')
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def proxy(path):
+    """Proxy all requests to the backend system."""
+    # Reconstruct the full path with query string
+    if request.query_string:
+        path_and_query = f"{path}?{request.query_string.decode()}"
+    else:
+        path_and_query = path
+    
+    return forward_request(path_and_query)
+
+@app.errorhandler(500)
+def error_500(e):
+    """Server error handler."""
+    print(f"500 Error: {e}")
+    return '''<html><body>
+    <h1>Server Error</h1>
+    <p>An error occurred. Check the server logs.</p>
+    </body></html>''', 500
+
+@app.errorhandler(404)
+def error_404(e):
+    """Not found handler."""
+    return '''<html><body>
+    <h1>Page Not Found</h1>
+    </body></html>''', 404
+
+# ==================== STARTUP ====================
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    print(f"✓ EDUSMART Render Proxy starting on port {port}")
+    print(f"✓ Proxying to: {BACKEND_URL}")
+    app.run(host='0.0.0.0', port=port, debug=False)
 
 # ==================== DATABASE FUNCTIONS ====================
 print("[STARTUP] Importing Flask...")
