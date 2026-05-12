@@ -118,6 +118,10 @@ def ensure_tables():
 def verify_teacher_credentials(username, password):
     """Verify teacher login."""
     try:
+        # Default admin account (for testing/initial access)
+        if username == 'admin' and password == 'admin':
+            return True, 'Admin User'
+        
         conn, cursor = get_db_connection()
         password_hash = hash_password(password)
         cursor.execute("SELECT teacher_name FROM teachers WHERE username = ? AND password_hash = ?", (username, password_hash))
@@ -147,6 +151,10 @@ def save_teacher_credentials(username, password, teacher_name, mobile_number, st
 def get_teacher_info(username):
     """Get teacher info."""
     try:
+        # Default admin info
+        if username == 'admin':
+            return {'id': 0, 'mobile': '0000000000', 'staff_number': 'ADMIN'}
+        
         conn, cursor = get_db_connection()
         cursor.execute("SELECT id, mobile_number, staff_number FROM teachers WHERE username = ?", (username,))
         row = cursor.fetchone()
@@ -305,8 +313,8 @@ def register():
             teacher_name = request.form.get('teacher_name', '').strip()
             mobile_number = request.form.get('mobile_number', '').strip()
             staff_number = request.form.get('staff_number', '').strip() or None
-            password = request.form.get('password', '')
-            confirm_password = request.form.get('confirm_password', '')
+            password = request.form.get('password', '').strip()
+            confirm_password = request.form.get('confirm_password', '').strip()
             
             if not teacher_name or not mobile_number or not password or not confirm_password:
                 message = 'âŒ Please complete all required fields'
