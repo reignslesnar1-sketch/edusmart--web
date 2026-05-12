@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python
-"
+"""
 EDUSMART - Render Web Server (Reverse Proxy)
 Forwards all requests to local exam system via ngrok tunnel.
-"
+"""
 
 print("[STARTUP] Python app starting...")
 
