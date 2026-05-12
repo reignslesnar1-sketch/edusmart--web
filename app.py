@@ -364,15 +364,241 @@ def dashboard():
     
     teacher_name = session.get('teacher_name', session.get('username', 'Teacher'))
     
-    template = TEMPLATES.get('DASHBOARD_TEMPLATE', '''
-    <html><head><title>Dashboard</title></head><body>
-    <h1>Dashboard</h1>
-    <p>Welcome, {{ teacher_name }}!</p>
-    <p>Students: {{ total_students }} | Exams: {{ total_exams }} | Subjects: {{ total_subjects }}</p>
-    <a href="/logout">Logout</a>
-    </body></html>
-    ''')
+    enhanced_dashboard = '''
+    <html>
+    <head>
+        <title>Dashboard - EDUSMART</title>
+        <meta charset="UTF-8">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+                min-height: 100vh;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 40px;
+                border-bottom: 3px solid #667eea;
+                padding-bottom: 20px;
+            }
+            h1 {
+                color: #667eea;
+                font-size: 2.5em;
+            }
+            .user-info {
+                text-align: right;
+            }
+            .user-info .teacher-name {
+                font-size: 1.3em;
+                color: #333;
+                font-weight: 600;
+            }
+            .user-info .username {
+                color: #999;
+                font-size: 0.9em;
+                margin-top: 5px;
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+            .stat-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+                text-align: center;
+                transition: transform 0.3s, box-shadow 0.3s;
+            }
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+            }
+            .stat-card .icon {
+                font-size: 2.5em;
+                margin-bottom: 10px;
+            }
+            .stat-card .label {
+                font-size: 0.95em;
+                opacity: 0.9;
+                margin-bottom: 15px;
+            }
+            .stat-card .number {
+                font-size: 2.8em;
+                font-weight: bold;
+                line-height: 1;
+            }
+            .menu-section {
+                margin-bottom: 40px;
+            }
+            .menu-section h2 {
+                color: #667eea;
+                font-size: 1.4em;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #eee;
+            }
+            .menu-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 15px;
+            }
+            .menu-item {
+                display: block;
+                padding: 20px;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                color: #333;
+                text-decoration: none;
+                border-radius: 10px;
+                text-align: center;
+                font-weight: 600;
+                transition: all 0.3s;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            .menu-item:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            .menu-item .icon {
+                font-size: 2em;
+                margin-bottom: 10px;
+            }
+            .menu-item .label {
+                font-size: 0.9em;
+            }
+            .footer {
+                margin-top: 50px;
+                padding-top: 20px;
+                border-top: 2px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            .btn-logout {
+                padding: 12px 30px;
+                background: #e74c3c;
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: 600;
+                transition: background 0.3s;
+                border: none;
+                cursor: pointer;
+            }
+            .btn-logout:hover {
+                background: #c0392b;
+            }
+            .system-info {
+                color: #999;
+                font-size: 0.85em;
+            }
+            @media (max-width: 768px) {
+                .container { padding: 20px; }
+                h1 { font-size: 1.8em; }
+                .header { flex-direction: column; gap: 20px; }
+                .user-info { text-align: left; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎓 EDUSMART Dashboard</h1>
+                <div class="user-info">
+                    <div class="teacher-name">{{ teacher_name }}</div>
+                    <div class="username">@{{ username }}</div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">👨‍🎓</div>
+                    <div class="label">Total Students</div>
+                    <div class="number">{{ total_students }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">📝</div>
+                    <div class="label">Exams</div>
+                    <div class="number">{{ total_exams }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">📚</div>
+                    <div class="label">Subjects</div>
+                    <div class="number">{{ total_subjects }}</div>
+                </div>
+            </div>
+            
+            <div class="menu-section">
+                <h2>📊 Management</h2>
+                <div class="menu-grid">
+                    <a href="/students" class="menu-item">
+                        <div class="icon">👥</div>
+                        <div class="label">View All Students</div>
+                    </a>
+                    <a href="/teachers" class="menu-item">
+                        <div class="icon">👨‍🏫</div>
+                        <div class="label">View Teachers</div>
+                    </a>
+                    <a href="/submit_marks" class="menu-item">
+                        <div class="icon">✍️</div>
+                        <div class="label">Submit Marks</div>
+                    </a>
+                    <a href="/view_submissions" class="menu-item">
+                        <div class="icon">📋</div>
+                        <div class="label">View Submissions</div>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="menu-section">
+                <h2>📈 Reports & Analysis</h2>
+                <div class="menu-grid">
+                    <a href="/student_reports" class="menu-item">
+                        <div class="icon">📑</div>
+                        <div class="label">Student Reports</div>
+                    </a>
+                    <a href="/notifications" class="menu-item">
+                        <div class="icon">🔔</div>
+                        <div class="label">Notifications</div>
+                    </a>
+                    <a href="/api/students" class="menu-item">
+                        <div class="icon">📥</div>
+                        <div class="label">Export Data (JSON)</div>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <div class="system-info">
+                    EDUSMART v1.0 | School: KANGA SCHOOL | GitHub: reignslesnar1-sketch
+                </div>
+                <a href="/logout" class="btn-logout">🚪 Logout</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
     
+    template = TEMPLATES.get('DASHBOARD_TEMPLATE', enhanced_dashboard)
     return render_template_string(template,
         username=session['username'],
         teacher_name=teacher_name,
@@ -541,14 +767,353 @@ def students_page():
         print(f"Error fetching students: {e}")
         pass
     
-    template = TEMPLATES.get('STUDENTS_TEMPLATE', '<html><body><h1>Students</h1></body></html>')
+    # Enhanced HTML template for all students
+    enhanced_template = '''
+    <html>
+    <head>
+        <title>All Registered Students - EDUSMART</title>
+        <meta charset="UTF-8">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+                min-height: 100vh;
+            }
+            .container { 
+                max-width: 1200px; 
+                margin: 0 auto; 
+                background: white; 
+                padding: 40px; 
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            }
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                border-bottom: 3px solid #667eea;
+                padding-bottom: 20px;
+            }
+            h1 { 
+                color: #667eea; 
+                font-size: 2.2em;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            .stats {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 30px;
+                flex-wrap: wrap;
+            }
+            .stat-box {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                flex: 1;
+                min-width: 150px;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            }
+            .stat-box h3 { font-size: 0.9em; opacity: 0.9; margin-bottom: 10px; }
+            .stat-box .number { font-size: 2.5em; font-weight: bold; }
+            
+            .search-filter {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+            }
+            .search-filter input, .search-filter select {
+                padding: 10px 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 0.95em;
+                flex: 1;
+                min-width: 200px;
+            }
+            .search-filter button {
+                padding: 10px 25px;
+                background: #667eea;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: background 0.3s;
+            }
+            .search-filter button:hover {
+                background: #764ba2;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            th {
+                background: #667eea;
+                color: white;
+                padding: 15px;
+                text-align: left;
+                font-weight: 600;
+            }
+            td {
+                padding: 12px 15px;
+                border-bottom: 1px solid #eee;
+            }
+            tr:hover {
+                background: #f8f9ff;
+            }
+            .grade-badge {
+                display: inline-block;
+                background: #667eea;
+                color: white;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 600;
+            }
+            .stream-badge {
+                display: inline-block;
+                background: #764ba2;
+                color: white;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 0.85em;
+            }
+            .action-buttons {
+                display: flex;
+                gap: 5px;
+            }
+            .btn-small {
+                padding: 6px 12px;
+                font-size: 0.85em;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                color: white;
+                background: #667eea;
+                transition: background 0.3s;
+            }
+            .btn-small:hover {
+                background: #764ba2;
+            }
+            .footer {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 2px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            .btn-primary {
+                display: inline-block;
+                padding: 12px 30px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: 600;
+                transition: transform 0.3s, box-shadow 0.3s;
+            }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            }
+            .no-students {
+                text-align: center;
+                padding: 40px 20px;
+                color: #999;
+            }
+            .no-students p { font-size: 1.1em; }
+            @media (max-width: 768px) {
+                .container { padding: 20px; }
+                h1 { font-size: 1.5em; }
+                table { font-size: 0.9em; }
+                thead { display: none; }
+                tr { display: block; margin-bottom: 20px; border: 1px solid #ddd; }
+                td { display: block; text-align: right; padding-left: 50%; position: relative; }
+                td:before { content: attr(data-label); position: absolute; left: 15px; font-weight: 600; color: #667eea; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📚 Registered Students</h1>
+                <span style="color: #999; font-size: 0.9em;">School: KANGA SCHOOL</span>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>Total Students</h3>
+                    <div class="number">{{ total_students }}</div>
+                </div>
+                <div class="stat-box">
+                    <h3>Grades Covered</h3>
+                    <div class="number">{{ grades|length }}</div>
+                </div>
+            </div>
+            
+            <div class="search-filter">
+                <input type="text" id="searchInput" placeholder="Search by name or admission number...">
+                <select id="gradeFilter">
+                    <option value="">All Grades</option>
+                    {% for grade in grades %}
+                    <option value="{{ grade }}">Grade {{ grade }}</option>
+                    {% endfor %}
+                </select>
+                <button onclick="applyFilters()">🔍 Search</button>
+            </div>
+            
+            {% if students %}
+            <table id="studentTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student Name</th>
+                        <th>Admission No.</th>
+                        <th>Grade</th>
+                        <th>Stream</th>
+                        <th>Parent Phone</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="student-row" data-grade="{{ student.grade }}" data-name="{{ student.student_name|lower }}" data-admission="{{ student.admission_number|lower }}">
+                        <td data-label="#">{{ loop.index }}</td>
+                        <td data-label="Student Name">{{ student.student_name }}</td>
+                        <td data-label="Admission No.">{{ student.admission_number }}</td>
+                        <td data-label="Grade"><span class="grade-badge">{{ student.grade }}</span></td>
+                        <td data-label="Stream"><span class="stream-badge">{{ student.stream or 'N/A' }}</span></td>
+                        <td data-label="Parent Phone">{{ student.parent_phone or 'N/A' }}</td>
+                        <td data-label="Actions"><button class="btn-small">View</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-students">
+                <p>📭 No students registered yet.</p>
+                <p style="color: #ccc; margin-top: 10px;">Students will appear here once they are added to the system.</p>
+            </div>
+            {% endif %}
+            
+            <div class="footer">
+                <a href="/dashboard" class="btn-primary">← Back to Dashboard</a>
+                <a href="/api/students" class="btn-primary" style="background: #764ba2;">📥 Export as JSON</a>
+                <span style="color: #999; font-size: 0.9em;">Updated: {% now "utc", "%Y-%m-%d %H:%M:%S" %}</span>
+            </div>
+        </div>
+        
+        <script>
+            function applyFilters() {
+                const searchText = document.getElementById('searchInput').value.toLowerCase();
+                const gradeFilter = document.getElementById('gradeFilter').value;
+                const rows = document.querySelectorAll('.student-row');
+                let visibleCount = 0;
+                
+                rows.forEach(row => {
+                    const name = row.getAttribute('data-name');
+                    const admission = row.getAttribute('data-admission');
+                    const grade = row.getAttribute('data-grade');
+                    
+                    const nameMatch = name.includes(searchText) || admission.includes(searchText);
+                    const gradeMatch = gradeFilter === '' || grade === gradeFilter;
+                    
+                    if (nameMatch && gradeMatch) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                if (visibleCount === 0) {
+                    const tbody = document.querySelector('table tbody');
+                    if (tbody) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = '<td colspan="7" style="text-align: center; color: #999; padding: 30px;">No students found matching your criteria.</td>';
+                        tbody.appendChild(tr);
+                        setTimeout(() => tr.remove(), 3000);
+                    }
+                }
+            }
+            
+            // Real-time search
+            document.getElementById('searchInput')?.addEventListener('keyup', applyFilters);
+        </script>
+    </body>
+    </html>
+    '''
+    
+    template = TEMPLATES.get('STUDENTS_TEMPLATE', enhanced_template)
     return render_template_string(template, 
         grades=grades,
         students=students,
         total_students=total_students)
 
+@app.route('/api/students')
+def api_students():
+    """API endpoint to get all registered students as JSON."""
+    import json
+    
+    try:
+        conn, cursor = get_db_connection()
+        
+        # Get all students
+        cursor.execute("""
+            SELECT id, student_name, admission_number, grade, stream, parent_phone
+            FROM students 
+            ORDER BY grade, student_name
+        """)
+        
+        students_data = []
+        for row in cursor.fetchall():
+            students_data.append({
+                'id': row[0],
+                'student_name': row[1],
+                'admission_number': row[2],
+                'grade': row[3],
+                'stream': row[4],
+                'parent_phone': row[5]
+            })
+        
+        # Get statistics
+        cursor.execute("SELECT COUNT(*) FROM students")
+        total_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(DISTINCT grade) FROM students")
+        total_grades = cursor.fetchone()[0]
+        
+        return {
+            'success': True,
+            'total_students': total_count,
+            'grades_covered': total_grades,
+            'students': students_data,
+            'metadata': {
+                'school': 'KANGA SCHOOL',
+                'system': 'EDUSMART',
+                'github_username': 'reignslesnar1-sketch'
+            }
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e)
+        }, 500
+
 @app.route('/teachers')
-def teachers_page():
     """Teachers management page with enhanced data."""
     if 'username' not in session:
         return redirect(url_for('login'))
