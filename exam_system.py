@@ -8162,6 +8162,8 @@ def create_flask_app():
                 total_marks = exam_data['total_marks']
                 year = exam_data['date'][:4] if exam_data['date'] else 'N/A'
                 
+                print(f"[RANKING DEBUG] Exam: {exam_name}, Student ID: {student_id}, Total Marks: {total_marks}, Grade: {grade}, Stream: {stream}")
+                
                 # Get stream position (rank within the student's stream for this exam)
                 stream_position = 'N/A'
                 if stream and stream.strip():  # Only if stream exists and is not empty
@@ -8175,11 +8177,15 @@ def create_flask_app():
                         ORDER BY total DESC
                     """, (exam_id, grade, stream.strip()))
                     stream_rankings = web_cursor.fetchall()
+                    print(f"  Stream rankings ({len(stream_rankings)} students): {[(sid, score) for sid, score in stream_rankings[:5]]}")
                     stream_position = 'N/A'
                     for idx, (sid, score) in enumerate(stream_rankings):
                         if sid == student_id:
                             stream_position = idx + 1
+                            print(f"  Student found at index {idx}, stream_position = {stream_position}, score = {score}")
                             break
+                else:
+                    print(f"  Stream is empty or None: '{stream}'")
                 
                 # Get overall position (rank within the grade for this exam)  
                 web_cursor.execute("""
@@ -8191,11 +8197,15 @@ def create_flask_app():
                     ORDER BY total DESC
                 """, (exam_id, grade))
                 overall_rankings = web_cursor.fetchall()
+                print(f"  Overall rankings ({len(overall_rankings)} students): {[(sid, score) for sid, score in overall_rankings[:5]]}")
                 overall_position = 'N/A'
                 for idx, (sid, score) in enumerate(overall_rankings):
                     if sid == student_id:
                         overall_position = idx + 1
+                        print(f"  Student found at index {idx}, overall_position = {overall_position}, score = {score}")
                         break
+                
+                print(f"  >> RESULT: Stream Rank = {stream_position}, Overall Rank = {overall_position}\n")
                 
                 performance_summary.append({
                     'exam': exam_name,
