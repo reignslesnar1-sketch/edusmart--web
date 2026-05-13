@@ -7882,16 +7882,29 @@ def create_flask_app():
         student_report = None
 
         if request.method == 'POST' or request.args.get('student_id'):
-            student_id = request.form.get('student_id') or request.args.get('student_id')
-            if student_id:
-                selected_student_id = int(student_id)
-                student_report = generate_student_report(selected_student_id)
+            try:
+                student_id = request.form.get('student_id') or request.args.get('student_id')
+                if student_id:
+                    selected_student_id = int(student_id)
+                    student_report = generate_student_report(selected_student_id)
+                    if student_report is None:
+                        print(f"[STUDENT_REPORTS] generate_student_report returned None for student_id={student_id}")
+            except Exception as e:
+                print(f"[STUDENT_REPORTS] Error generating student report: {e}")
+                import traceback
+                traceback.print_exc()
 
-        return render_template_string(STUDENT_REPORTS_TEMPLATE,
-                                    username=session['username'],
-                                    all_students=all_students,
-                                    selected_student_id=selected_student_id,
-                                    student_report=student_report)
+        try:
+            return render_template_string(STUDENT_REPORTS_TEMPLATE,
+                                        username=session['username'],
+                                        all_students=all_students,
+                                        selected_student_id=selected_student_id,
+                                        student_report=student_report)
+        except Exception as e:
+            print(f"[STUDENT_REPORTS] Error rendering template: {e}")
+            import traceback
+            traceback.print_exc()
+            return f"<h1>Error loading student reports</h1><p>{str(e)}</p>", 500
 
     @web_app.route('/track_progress')
     def track_progress():
