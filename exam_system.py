@@ -5337,6 +5337,7 @@ STUDENT_REPORTS_TEMPLATE = """
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Performance Summary - Modern Card Layout -->
                 {% if student_report.performance_summary %}
