@@ -8767,7 +8767,7 @@ def create_flask_app():
                         
                         # Get student results for this exam
                         active_cursor.execute("""
-                            SELECT e.id, s.name, r.marks, sub.name, st.stream
+                            SELECT e.id, st.student_name, r.marks, sub.name, st.stream
                             FROM results r
                             JOIN exams e ON r.exam_id = e.id
                             JOIN subjects sub ON r.subject_id = sub.id
