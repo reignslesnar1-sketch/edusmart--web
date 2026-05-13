@@ -8164,35 +8164,35 @@ def create_flask_app():
                 
                 # Get stream position (rank within the student's stream for this exam)
                 stream_position = 'N/A'
-                if stream:
-                    # Get all students in same grade and stream with their totals for this exam
+                if stream and stream.strip():  # Only if stream exists and is not empty
+                    # Get all students in stream with their totals, then count rank
                     web_cursor.execute("""
-                        SELECT s.id, COALESCE(SUM(r.marks), 0) as total_marks
+                        SELECT s.id, COALESCE(SUM(r.marks), 0) as total
                         FROM students s
                         LEFT JOIN results r ON s.id = r.student_id AND r.exam_id = ?
                         WHERE s.grade = ? AND s.stream = ?
                         GROUP BY s.id
-                        ORDER BY total_marks DESC
-                    """, (exam_id, grade, stream))
+                        ORDER BY total DESC
+                    """, (exam_id, grade, stream.strip()))
                     stream_rankings = web_cursor.fetchall()
-                    stream_position = 1
-                    for idx, (sid, _) in enumerate(stream_rankings):
+                    stream_position = 'N/A'
+                    for idx, (sid, score) in enumerate(stream_rankings):
                         if sid == student_id:
                             stream_position = idx + 1
                             break
                 
-                # Get overall position (rank within the grade for this exam)
+                # Get overall position (rank within the grade for this exam)  
                 web_cursor.execute("""
-                    SELECT s.id, COALESCE(SUM(r.marks), 0) as total_marks
+                    SELECT s.id, COALESCE(SUM(r.marks), 0) as total
                     FROM students s
                     LEFT JOIN results r ON s.id = r.student_id AND r.exam_id = ?
                     WHERE s.grade = ?
                     GROUP BY s.id
-                    ORDER BY total_marks DESC
+                    ORDER BY total DESC
                 """, (exam_id, grade))
                 overall_rankings = web_cursor.fetchall()
-                overall_position = 1
-                for idx, (sid, _) in enumerate(overall_rankings):
+                overall_position = 'N/A'
+                for idx, (sid, score) in enumerate(overall_rankings):
                     if sid == student_id:
                         overall_position = idx + 1
                         break
