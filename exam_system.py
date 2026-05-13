@@ -8165,15 +8165,15 @@ def create_flask_app():
                 # Get stream position (rank within the student's stream for this exam)
                 stream_position = 'N/A'
                 if stream:
-                    # Get all students in same grade and stream with their totals
+                    # Get all students in same grade and stream with their totals for this exam
                     web_cursor.execute("""
-                        SELECT s.id, SUM(r.marks) as total_marks
+                        SELECT s.id, COALESCE(SUM(r.marks), 0) as total_marks
                         FROM students s
-                        JOIN results r ON s.id = r.student_id
-                        WHERE s.grade = ? AND s.stream = ? AND r.exam_id = ?
+                        LEFT JOIN results r ON s.id = r.student_id AND r.exam_id = ?
+                        WHERE s.grade = ? AND s.stream = ?
                         GROUP BY s.id
                         ORDER BY total_marks DESC
-                    """, (grade, stream, exam_id))
+                    """, (exam_id, grade, stream))
                     stream_rankings = web_cursor.fetchall()
                     stream_position = 1
                     for idx, (sid, _) in enumerate(stream_rankings):
@@ -8183,13 +8183,13 @@ def create_flask_app():
                 
                 # Get overall position (rank within the grade for this exam)
                 web_cursor.execute("""
-                    SELECT s.id, SUM(r.marks) as total_marks
+                    SELECT s.id, COALESCE(SUM(r.marks), 0) as total_marks
                     FROM students s
-                    JOIN results r ON s.id = r.student_id
-                    WHERE s.grade = ? AND r.exam_id = ?
+                    LEFT JOIN results r ON s.id = r.student_id AND r.exam_id = ?
+                    WHERE s.grade = ?
                     GROUP BY s.id
                     ORDER BY total_marks DESC
-                """, (grade, exam_id))
+                """, (exam_id, grade))
                 overall_rankings = web_cursor.fetchall()
                 overall_position = 1
                 for idx, (sid, _) in enumerate(overall_rankings):
