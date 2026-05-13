@@ -7250,6 +7250,9 @@ def create_flask_app():
                             session['username'] = final_username
                             message = "Account settings updated successfully!"
                             log_user_activity("Teacher", f"Updated account settings - Username: {final_username}", "1 min")
+        
+        return render_template_string(SETTINGS_TEMPLATE, message=message, error=error, username=session.get('username', ''))
+
     @web_app.route('/submit_marks', methods=['GET', 'POST'])
     def submit_marks():
         if 'username' not in session:
