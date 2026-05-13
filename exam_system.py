@@ -8359,12 +8359,10 @@ def create_flask_app():
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         .container {
-            width: min(100%, 500px);
+            max-width: 900px;
+            margin: 0 auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 25px 80px rgba(0,0,0,0.15);
@@ -8427,8 +8425,7 @@ def create_flask_app():
             background: white;
         }
         button {
-            width: 100%;
-            padding: 12px;
+            padding: 12px 24px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -8442,95 +8439,146 @@ def create_flask_app():
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(102,126,234,0.3);
         }
-        .results {
-            margin-top: 30px;
+        .search-form {
+            max-width: 500px;
+            margin: 0 auto;
         }
-        .result-item {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 8px;
+        /* Student Profile Styles */
+        .student-profile {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            border: 2px solid #667eea30;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
         }
-        .result-header {
-            display: flex;
-            justify-content: space-between;
+        .profile-header {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
             align-items: center;
-            margin-bottom: 10px;
         }
-        .exam-name {
-            font-weight: 600;
-            color: #2b3e50;
-        }
-        .subject-name {
-            color: #667eea;
-            font-weight: 500;
-        }
-        .marks-display {
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
         }
-        .marks-value {
-            font-size: 1.3rem;
+        .profile-info {
+            flex: 1;
+        }
+        .profile-name {
+            font-size: 1.8rem;
             font-weight: 700;
-            color: #667eea;
+            color: #2b3e50;
+            margin: 0 0 10px 0;
         }
-        .marks-out-of {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-        .performance {
-            font-size: 0.85rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: #e7f3ff;
-            color: #0066cc;
-            font-weight: 500;
-        }
-        .ranking-info {
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
+        }
+        .detail-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .detail-label {
+            color: #7f8c8d;
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-bottom: 3px;
+        }
+        .detail-value {
+            color: #2b3e50;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        /* Exams List Styles */
+        .exams-section h2 {
+            color: #2b3e50;
+            margin: 30px 0 20px 0;
+            font-size: 1.5rem;
+        }
+        .exams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .exam-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .exam-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102,126,234,0.2);
+            transform: translateY(-3px);
+            background: #667eea05;
+        }
+        .exam-title {
+            font-weight: 700;
+            color: #2b3e50;
+            font-size: 1.1rem;
+        }
+        .exam-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            font-size: 0.9rem;
         }
-        .ranking-card {
-            background: white;
+        .stat {
+            background: #f8f9fa;
             padding: 10px;
             border-radius: 6px;
-            border-left: 3px solid #667eea;
+            text-align: center;
         }
-        .ranking-label {
+        .stat-label {
             color: #7f8c8d;
-            font-weight: 500;
+            font-size: 0.8rem;
             margin-bottom: 3px;
         }
-        .ranking-value {
+        .stat-value {
+            color: #667eea;
+            font-weight: 700;
             font-size: 1.2rem;
-            font-weight: 700;
-            color: #667eea;
         }
-        .total-marks-section {
-            background: linear-gradient(135deg, #667eea15, #764ba215);
-            padding: 15px;
-            border-radius: 8px;
+        .exam-action {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+            margin-top: auto;
+        }
+        .exam-action:hover {
+            opacity: 0.9;
+        }
+        .search-again-btn {
+            display: inline-block;
             margin-top: 20px;
-            text-align: center;
-            border: 2px solid #667eea30;
+            background: #6b7280;
         }
-        .total-marks-label {
-            color: #7f8c8d;
-            font-weight: 500;
-            margin-bottom: 5px;
-            font-size: 0.95rem;
-        }
-        .total-marks-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #667eea;
+        .search-again-btn:hover {
+            background: #4b5563;
         }
         .error, .success {
             text-align: center;
@@ -8556,10 +8604,11 @@ def create_flask_app():
             background: #f8f9fa;
             border-radius: 8px;
         }
-        @media (max-width: 500px) {
-            .container { margin: 20px; padding: 25px; }
-            .header h1 { font-size: 1.5rem; }
-            .ranking-info { grid-template-columns: 1fr; }
+        @media (max-width: 768px) {
+            .container { padding: 25px; }
+            .profile-header { grid-template-columns: 1fr; }
+            .profile-avatar { width: 60px; height: 60px; font-size: 2rem; }
+            .exams-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -8568,67 +8617,120 @@ def create_flask_app():
         <div class="header">
             <p class="school-name">🎓 EDUSMART SOLUTIONS</p>
             <h1>Check Exam Results</h1>
-            <p>Enter your admission number to view your exam results</p>
+            <p>Enter your admission number to view your student profile and exam results</p>
         </div>
         
-        <form method="POST">
-            <div class="form-group">
-                <label for="admission_number">Admission Number:</label>
-                <input type="text" id="admission_number" name="admission_number" placeholder="e.g., ADM001" {% if admission_number_input %}value="{{ admission_number_input }}"{% endif %} required autofocus>
-            </div>
-            <button type="submit">View Results</button>
-        </form>
-        
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
-        
-        {% if success %}
-        <div class="success">Results found for {{ student_name }}</div>
-        {% endif %}
-        
-        {% if results %}
-        <div class="results">
-            <h2 style="color: #2b3e50; margin-bottom: 20px;">📋 Your Exam Results</h2>
-            {% for result in results %}
-            <div class="result-item">
-                <div class="result-header">
-                    <div>
-                        <div class="exam-name">{{ result.exam }}</div>
-                        <div class="subject-name">{{ result.subject }}</div>
-                    </div>
-                    <div class="marks-display">
-                        <div>
-                            <div class="marks-value">{{ result.marks }}</div>
-                            <div class="marks-out-of">/100</div>
-                        </div>
-                        <div class="performance">{{ result.performance }}</div>
-                    </div>
+        {% if not student_profile %}
+        <div class="search-form">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="admission_number">Admission Number:</label>
+                    <input type="text" id="admission_number" name="admission_number" placeholder="e.g., ADM001" {% if admission_number_input %}value="{{ admission_number_input }}"{% endif %} required autofocus>
                 </div>
-                <div class="ranking-info">
-                    <div class="ranking-card">
-                        <div class="ranking-label">Stream Ranking</div>
-                        <div class="ranking-value">{{ result.stream_rank }} / {{ result.stream_total }}</div>
-                    </div>
-                    <div class="ranking-card">
-                        <div class="ranking-label">Overall Ranking</div>
-                        <div class="ranking-value">{{ result.overall_rank }} / {{ result.overall_total }}</div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+                <button type="submit" style="width: 100%;">Search Student</button>
+            </form>
             
-            {% if total_exam_marks %}
-            <div class="total-marks-section">
-                <div class="total-marks-label">📊 Total Marks (All Subjects)</div>
-                <div class="total-marks-value">{{ total_exam_marks }} / {{ total_possible_marks }}</div>
-            </div>
+            {% if error %}
+            <div class="error">{{ error }}</div>
             {% endif %}
         </div>
-        {% elif not error and admission_number_input %}
-        <div class="no-results">
-            ❌ No results found for this admission number. Please check and try again.
+        
+        {% else %}
+        <!-- Student Profile Section -->
+        <div class="student-profile">
+            <div class="profile-header">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-info">
+                    <h2 class="profile-name">{{ student_profile.name }}</h2>
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Admission Number</div>
+                            <div class="detail-value">{{ student_profile.admission }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Stream</div>
+                            <div class="detail-value">{{ student_profile.stream }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Class/Form</div>
+                            <div class="detail-value">{{ student_profile.class }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Total Exams</div>
+                            <div class="detail-value">{{ student_profile.exam_count }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+        <!-- Exams Section -->
+        {% if student_profile.exams %}
+        <div class="exams-section">
+            <h2>📋 Exams Completed</h2>
+            <div class="exams-grid">
+                {% for exam in student_profile.exams %}
+                <form method="POST" style="display: contents;">
+                    <div class="exam-card">
+                        <div class="exam-title">{{ exam.name }}</div>
+                        <div class="exam-stats">
+                            <div class="stat">
+                                <div class="stat-label">Subjects</div>
+                                <div class="stat-value">{{ exam.subject_count }}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Total Marks</div>
+                                <div class="stat-value">{{ exam.total_marks }}</div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="view_exam_results" value="1">
+                        <input type="hidden" name="exam_id" value="{{ exam.id }}">
+                        <input type="hidden" name="admission_number" value="{{ student_profile.admission }}">
+                        <button type="submit" class="exam-action">View Results →</button>
+                    </div>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Search Again Button -->
+        <form method="POST" style="margin-top: 30px;">
+            <button type="submit" name="search_again" value="1" class="search-again-btn" style="width: 100%;">🔍 Search Another Student</button>
+        </form>
+        
+        <!-- Results Display -->
+        {% if exam_results %}
+        <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e7eb;">
+            <h2 style="color: #2b3e50; margin-bottom: 20px;">📊 {{ current_exam_name }} - Detailed Results</h2>
+            <div style="display: grid; gap: 15px;">
+                {% for result in exam_results %}
+                <div style="background: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div>
+                            <div style="font-weight: 600; color: #2b3e50;">{{ result.subject }}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">{{ result.marks }}</div>
+                            <div style="color: #7f8c8d; font-size: 0.9rem;">/100</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 0.9rem;">
+                        <div style="background: white; padding: 8px; border-radius: 4px; border-left: 3px solid #667eea;">
+                            <div style="color: #7f8c8d; margin-bottom: 2px;">Stream Rank</div>
+                            <div style="font-weight: 700; color: #667eea;">{{ result.stream_rank }} / {{ result.stream_total }}</div>
+                        </div>
+                        <div style="background: white; padding: 8px; border-radius: 4px; border-left: 3px solid #764ba2;">
+                            <div style="color: #7f8c8d; margin-bottom: 2px;">Overall Rank</div>
+                            <div style="font-weight: 700; color: #764ba2;">{{ result.overall_rank }} / {{ result.overall_total }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
         {% endif %}
     </div>
 </body>
@@ -8636,181 +8738,196 @@ def create_flask_app():
         """
         
         if request.method == 'POST':
+            # Handle "Search Another Student" button
+            if request.form.get('search_again') == '1':
+                return render_template_string(CHECK_RESULTS_TEMPLATE, admission_number_input='')
+            
+            # Handle exam results view
+            if request.form.get('view_exam_results') == '1':
+                exam_id = request.form.get('exam_id')
+                admission_number = request.form.get('admission_number', '').strip()
+                
+                if exam_id and admission_number:
+                    try:
+                        active_cursor = web_cursor if web_cursor is not None else cursor
+                        
+                        # Get exam name first
+                        active_cursor.execute("SELECT name FROM exams WHERE id = ?", (exam_id,))
+                        exam_name_result = active_cursor.fetchone()
+                        current_exam_name = exam_name_result[0] if exam_name_result else "Exam"
+                        
+                        # Get student results for this exam
+                        active_cursor.execute("""
+                            SELECT e.id, s.name, r.marks, sub.name, st.stream
+                            FROM results r
+                            JOIN exams e ON r.exam_id = e.id
+                            JOIN subjects sub ON r.subject_id = sub.id
+                            JOIN students st ON r.student_id = st.id
+                            WHERE UPPER(TRIM(st.admission_number)) = UPPER(TRIM(?)) AND e.id = ?
+                            ORDER BY sub.name
+                        """, (admission_number, exam_id))
+                        records = active_cursor.fetchall()
+                        
+                        if records:
+                            student_stream = records[0][4]
+                            student_name = records[0][1]
+                            
+                            # Build exam results with rankings
+                            exam_results = []
+                            for rec in records:
+                                exam_id_val, student_name, marks, subject, stream = rec
+                                
+                                # Get stream ranking
+                                active_cursor.execute("""
+                                    SELECT COUNT(DISTINCT s.id) FROM results r
+                                    JOIN students s ON r.student_id = s.id
+                                    WHERE r.exam_id = ? AND s.stream = ? AND
+                                    (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id = s.id AND r2.exam_id = ?) >
+                                    (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id IN 
+                                        (SELECT id FROM students WHERE admission_number = ?) AND r2.exam_id = ?)
+                                """, (exam_id, stream, exam_id, admission_number, exam_id))
+                                stream_rank_result = active_cursor.fetchone()
+                                stream_rank = (stream_rank_result[0] if stream_rank_result else 0) + 1
+                                
+                                # Get total in stream
+                                active_cursor.execute("""
+                                    SELECT COUNT(DISTINCT s.id) FROM results r
+                                    JOIN students s ON r.student_id = s.id
+                                    WHERE r.exam_id = ? AND s.stream = ?
+                                """, (exam_id, stream))
+                                stream_total_result = active_cursor.fetchone()
+                                stream_total = stream_total_result[0] if stream_total_result else 0
+                                
+                                # Get overall ranking
+                                active_cursor.execute("""
+                                    SELECT COUNT(DISTINCT s.id) FROM results r
+                                    JOIN students s ON r.student_id = s.id
+                                    WHERE r.exam_id = ? AND
+                                    (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id = s.id AND r2.exam_id = ?) >
+                                    (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id IN 
+                                        (SELECT id FROM students WHERE admission_number = ?) AND r2.exam_id = ?)
+                                """, (exam_id, exam_id, admission_number, exam_id))
+                                overall_rank_result = active_cursor.fetchone()
+                                overall_rank = (overall_rank_result[0] if overall_rank_result else 0) + 1
+                                
+                                # Get overall total
+                                active_cursor.execute("""
+                                    SELECT COUNT(DISTINCT s.id) FROM results r
+                                    JOIN students s ON r.student_id = s.id
+                                    WHERE r.exam_id = ?
+                                """, (exam_id,))
+                                overall_total_result = active_cursor.fetchone()
+                                overall_total = overall_total_result[0] if overall_total_result else 0
+                                
+                                exam_results.append({
+                                    'subject': subject,
+                                    'marks': marks,
+                                    'stream_rank': stream_rank,
+                                    'stream_total': stream_total,
+                                    'overall_rank': overall_rank,
+                                    'overall_total': overall_total
+                                })
+                            
+                            # Get student profile for display
+                            active_cursor.execute("SELECT student_name, admission_number, stream FROM students WHERE admission_number = ?", (admission_number,))
+                            student_info = active_cursor.fetchone()
+                            student_name = student_info[0] if student_info else "Student"
+                            student_stream = student_info[2] if student_info else ""
+                            
+                            # Get all exams for this student
+                            active_cursor.execute("""
+                                SELECT DISTINCT e.id, e.name, COUNT(DISTINCT sub.id), SUM(r.marks)
+                                FROM results r
+                                JOIN exams e ON r.exam_id = e.id
+                                JOIN subjects sub ON r.subject_id = sub.id
+                                JOIN students s ON r.student_id = s.id
+                                WHERE UPPER(TRIM(s.admission_number)) = UPPER(TRIM(?))
+                                GROUP BY e.id
+                                ORDER BY e.created_at DESC
+                            """, (admission_number,))
+                            exams_data = active_cursor.fetchall()
+                            student_exams = [{'id': e[0], 'name': e[1], 'subject_count': e[2], 'total_marks': e[3]} for e in exams_data]
+                            
+                            return render_template_string(
+                                CHECK_RESULTS_TEMPLATE,
+                                student_profile={
+                                    'name': student_name,
+                                    'admission': admission_number,
+                                    'stream': student_stream,
+                                    'class': student_stream,
+                                    'exam_count': len(student_exams),
+                                    'exams': student_exams
+                                },
+                                exam_results=exam_results,
+                                current_exam_name=current_exam_name,
+                                admission_number_input=admission_number
+                            )
+                    except Exception as e:
+                        print(f"Error fetching exam results: {e}")
+            
+            # Initial student search
             admission_number = request.form.get('admission_number', '').strip()
             
             if not admission_number:
                 return render_template_string(CHECK_RESULTS_TEMPLATE, error="Please enter an admission number", admission_number_input='')
             
             try:
-                # Check if database cursors are available
-                if web_cursor is None and cursor is None:
+                active_cursor = web_cursor if web_cursor is not None else cursor
+                
+                # Get student info
+                active_cursor.execute("SELECT id, student_name, admission_number, stream FROM students WHERE UPPER(TRIM(admission_number)) = UPPER(TRIM(?))", (admission_number,))
+                student_info = active_cursor.fetchone()
+                
+                if not student_info:
                     return render_template_string(
-                        CHECK_RESULTS_TEMPLATE, 
-                        error="Database connection error. Please try again later.",
+                        CHECK_RESULTS_TEMPLATE,
+                        error="❌ No student found with this admission number. Please verify and try again.",
                         admission_number_input=admission_number
                     )
                 
-                # Use web_cursor if available, otherwise use main cursor
-                active_cursor = web_cursor if web_cursor is not None else cursor
+                student_id, student_name, student_admission, student_stream = student_info
                 
-                print(f"Searching for admission number: {admission_number}")
-                
-                # Query with case-insensitive and whitespace-trimmed comparison
+                # Get all exams this student participated in
                 active_cursor.execute("""
-                    SELECT s.student_name, s.admission_number, s.stream, sub.name, e.name, r.marks, e.id
+                    SELECT DISTINCT e.id, e.name, COUNT(DISTINCT sub.id), SUM(r.marks)
                     FROM results r
-                    JOIN students s ON r.student_id = s.id
-                    JOIN subjects sub ON r.subject_id = sub.id
                     JOIN exams e ON r.exam_id = e.id
-                    WHERE UPPER(TRIM(s.admission_number)) = UPPER(TRIM(?))
-                    ORDER BY e.created_at DESC, sub.name
-                """, (admission_number,))
-                records = active_cursor.fetchall()
+                    JOIN subjects sub ON r.subject_id = sub.id
+                    WHERE r.student_id = ?
+                    GROUP BY e.id
+                    ORDER BY e.created_at DESC
+                """, (student_id,))
+                exams_data = active_cursor.fetchall()
                 
-                print(f"Found {len(records) if records else 0} result records")
+                if not exams_data:
+                    return render_template_string(
+                        CHECK_RESULTS_TEMPLATE,
+                        error="✓ Student found, but no exam results have been entered yet. Please check back after exams.",
+                        admission_number_input=admission_number
+                    )
                 
-                if not records:
-                    # Debug: Check if student exists at all
-                    try:
-                        debug_cursor = web_cursor if web_cursor is not None else cursor
-                        debug_cursor.execute("SELECT COUNT(*) FROM students WHERE UPPER(TRIM(admission_number)) = UPPER(TRIM(?))", (admission_number,))
-                        student_count_result = debug_cursor.fetchone()
-                        student_count = student_count_result[0] if student_count_result else 0
-                        print(f"Student count for admission {admission_number}: {student_count}")
-                        
-                        if student_count > 0:
-                            # Student exists but has no results
-                            return render_template_string(
-                                CHECK_RESULTS_TEMPLATE, 
-                                error="✓ Student found, but no exam results have been entered yet. Please check back after exams.",
-                                admission_number_input=admission_number
-                            )
-                        else:
-                            return render_template_string(
-                                CHECK_RESULTS_TEMPLATE, 
-                                error="❌ No student found with this admission number. Please verify and try again.",
-                                admission_number_input=admission_number
-                            )
-                    except Exception as debug_e:
-                        print(f"Debug query error: {debug_e}")
-                        return render_template_string(
-                            CHECK_RESULTS_TEMPLATE, 
-                            error="No results found for this admission number.",
-                            admission_number_input=admission_number
-                        )
-                
-                student_name = records[0][1]
-                student_stream = records[0][2]
-                
-                # Group results by exam for ranking calculations
-                results_by_exam = {}
-                for rec in records:
-                    student_name, admission, stream, subject, exam_name, marks, exam_id = rec
-                    if exam_id not in results_by_exam:
-                        results_by_exam[exam_id] = {
-                            'exam_name': exam_name,
-                            'stream': stream,
-                            'subjects': []
-                        }
-                    results_by_exam[exam_id]['subjects'].append({
-                        'subject': subject,
-                        'marks': marks
-                    })
-                
-                results = []
-                total_exam_marks = 0
-                total_possible_marks = 0
-                
-                for exam_id, exam_data in results_by_exam.items():
-                    # Calculate total marks for this exam for this student
-                    exam_total = sum(s['marks'] for s in exam_data['subjects'])
-                    total_exam_marks += exam_total
-                    total_possible_marks += len(exam_data['subjects']) * 100
-                    
-                    for subject_data in exam_data['subjects']:
-                        subject = subject_data['subject']
-                        marks = subject_data['marks']
-                        
-                        # Get ranking within stream for this exam
-                        active_cursor.execute("""
-                            SELECT COUNT(DISTINCT s.id) FROM results r
-                            JOIN students s ON r.student_id = s.id
-                            JOIN exams e ON r.exam_id = e.id
-                            WHERE e.id = ? AND s.stream = ? AND 
-                            (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id = s.id AND r2.exam_id = e.id) >
-                            (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id IN 
-                                (SELECT id FROM students WHERE admission_number = ?) AND r2.exam_id = e.id)
-                        """, (exam_id, student_stream, admission_number))
-                        stream_rank_result = active_cursor.fetchone()
-                        stream_rank = (stream_rank_result[0] if stream_rank_result else 0) + 1
-                        
-                        # Get total students in stream for this exam
-                        active_cursor.execute("""
-                            SELECT COUNT(DISTINCT s.id) FROM results r
-                            JOIN students s ON r.student_id = s.id
-                            WHERE r.exam_id = ? AND s.stream = ?
-                        """, (exam_id, student_stream))
-                        stream_total_result = active_cursor.fetchone()
-                        stream_total = stream_total_result[0] if stream_total_result else 0
-                        
-                        # Get overall ranking for this exam
-                        active_cursor.execute("""
-                            SELECT COUNT(DISTINCT s.id) FROM results r
-                            JOIN students s ON r.student_id = s.id
-                            JOIN exams e ON r.exam_id = e.id
-                            WHERE e.id = ? AND
-                            (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id = s.id AND r2.exam_id = e.id) >
-                            (SELECT SUM(r2.marks) FROM results r2 WHERE r2.student_id IN 
-                                (SELECT id FROM students WHERE admission_number = ?) AND r2.exam_id = e.id)
-                        """, (exam_id, admission_number))
-                        overall_rank_result = active_cursor.fetchone()
-                        overall_rank = (overall_rank_result[0] if overall_rank_result else 0) + 1
-                        
-                        # Get total students for this exam
-                        active_cursor.execute("""
-                            SELECT COUNT(DISTINCT s.id) FROM results r
-                            JOIN students s ON r.student_id = s.id
-                            WHERE r.exam_id = ?
-                        """, (exam_id,))
-                        overall_total_result = active_cursor.fetchone()
-                        overall_total = overall_total_result[0] if overall_total_result else 0
-                        
-                        # Get performance with KJSEA level
-                        perf_info = get_performance_level(marks, level="KJSEA")
-                        label = perf_info[0] if isinstance(perf_info, tuple) else perf_info
-                        
-                        results.append({
-                            'student_name': student_name,
-                            'admission_number': admission,
-                            'subject': subject,
-                            'exam': exam_data['exam_name'],
-                            'marks': marks,
-                            'performance': label,
-                            'stream_rank': stream_rank,
-                            'stream_total': stream_total,
-                            'overall_rank': overall_rank,
-                            'overall_total': overall_total
-                        })
-                
-                print(f"Returning {len(results)} results for student {student_name}")
+                student_exams = [{'id': e[0], 'name': e[1], 'subject_count': e[2], 'total_marks': e[3]} for e in exams_data]
                 
                 return render_template_string(
                     CHECK_RESULTS_TEMPLATE,
-                    student_name=student_name,
-                    results=results,
-                    total_exam_marks=total_exam_marks,
-                    total_possible_marks=total_possible_marks,
-                    success=True,
+                    student_profile={
+                        'name': student_name,
+                        'admission': student_admission,
+                        'stream': student_stream,
+                        'class': student_stream,
+                        'exam_count': len(student_exams),
+                        'exams': student_exams
+                    },
                     admission_number_input=admission_number
                 )
+            
             except Exception as e:
-                print(f"Error retrieving results: {e}")
+                print(f"Error retrieving student: {e}")
                 import traceback
                 traceback.print_exc()
-                error_msg = f"An error occurred: {str(e)}" if str(e) else "Unable to retrieve results. Please try again."
                 return render_template_string(
                     CHECK_RESULTS_TEMPLATE,
-                    error=error_msg,
+                    error=f"An error occurred: {str(e)}",
                     admission_number_input=admission_number
                 )
         
