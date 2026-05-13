@@ -4129,6 +4129,9 @@ SUBMIT_MARKS_TEMPLATE = """
             .sidebar { width: 100%; }
             .student-row { flex-direction: column; align-items: stretch; }
             .marks-input { width: 100%; min-width: 0; margin-left: 0; }
+            .search-bar { flex-direction: column; }
+            .search-bar input { width: 100%; }
+            .search-btn { width: 100%; padding: 16px 20px; font-size: 16px; font-weight: 600; }
             button { width: 100%; margin-right: 0; }
             .back-btn { margin-top: 10px; }
         }
