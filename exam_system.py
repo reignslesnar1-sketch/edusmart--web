@@ -8158,24 +8158,25 @@ def create_flask_app():
             # Calculate performance summary with rankings for each exam
             performance_summary = []
             for exam_name, exam_data in exams_data.items():
-                exam_id = exam_data['exam_id']
                 total_marks = exam_data['total_marks']
                 year = exam_data['date'][:4] if exam_data['date'] else 'N/A'
                 
                 print(f"[RANKING DEBUG] Exam: {exam_name}, Student ID: {student_id}, Total Marks: {total_marks}, Grade: {grade}, Stream: {stream}")
                 
                 # Get stream position (rank within the student's stream for this exam)
+                # Use exam_name to identify the exam, not exam_id (which might be different per subject)
                 stream_position = 'N/A'
                 if stream and stream.strip():  # Only if stream exists and is not empty
-                    # Get all students in stream with their totals, then count rank
+                    # Get all students in stream with their totals for this EXAM (across all subjects)
                     web_cursor.execute("""
                         SELECT s.id, COALESCE(SUM(r.marks), 0) as total
                         FROM students s
-                        LEFT JOIN results r ON s.id = r.student_id AND r.exam_id = ?
-                        WHERE s.grade = ? AND s.stream = ?
+                        LEFT JOIN results r ON s.id = r.student_id
+                        LEFT JOIN exams e ON r.exam_id = e.id
+                        WHERE s.grade = ? AND s.stream = ? AND e.name = ?
                         GROUP BY s.id
                         ORDER BY total DESC
-                    """, (exam_id, grade, stream.strip()))
+                    """, (grade, stream.strip(), exam_name))
                     stream_rankings = web_cursor.fetchall()
                     print(f"  Stream rankings ({len(stream_rankings)} students): {[(sid, score) for sid, score in stream_rankings[:5]]}")
                     stream_position = 'N/A'
@@ -8187,15 +8188,17 @@ def create_flask_app():
                 else:
                     print(f"  Stream is empty or None: '{stream}'")
                 
-                # Get overall position (rank within the grade for this exam)  
+                # Get overall position (rank within the grade for this exam)
+                # Use exam_name to identify the exam
                 web_cursor.execute("""
                     SELECT s.id, COALESCE(SUM(r.marks), 0) as total
                     FROM students s
-                    LEFT JOIN results r ON s.id = r.student_id AND r.exam_id = ?
-                    WHERE s.grade = ?
+                    LEFT JOIN results r ON s.id = r.student_id
+                    LEFT JOIN exams e ON r.exam_id = e.id
+                    WHERE s.grade = ? AND e.name = ?
                     GROUP BY s.id
                     ORDER BY total DESC
-                """, (exam_id, grade))
+                """, (grade, exam_name))
                 overall_rankings = web_cursor.fetchall()
                 print(f"  Overall rankings ({len(overall_rankings)} students): {[(sid, score) for sid, score in overall_rankings[:5]]}")
                 overall_position = 'N/A'
