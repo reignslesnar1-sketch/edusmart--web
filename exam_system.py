@@ -6002,7 +6002,7 @@ TEACHERS_AUTH_TEMPLATE = """
 
 def create_flask_app():
     """Create and configure the Flask web application for online results."""
-    global web_app, web_conn, web_cursor
+    global web_app, web_conn, web_cursor, cursor, conn
     
     if not FLASK_AVAILABLE:
         return None
@@ -6017,8 +6017,12 @@ def create_flask_app():
     # Create a separate database connection for the web server
     # Allow cross-thread access since Flask runs in its own thread
     print(f"Web server connecting to database: {DB_FILE}")
-    web_conn = sqlite3.connect(DB_FILE, check_same_thread=False)
+    web_conn = sqlite3.connect(DB_FILE, check_same_thread=False, timeout=20)
     web_cursor = web_conn.cursor()
+    
+    # Set global cursor/conn to web versions so ensure_tables() can use them
+    cursor = web_cursor
+    conn = web_conn
     
     # Ensure database tables and default subjects are set up for web server
     ensure_tables()
@@ -9219,6 +9223,7 @@ def stop_web_server():
 
 
 def ensure_tables():
+    global cursor, conn
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS students(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
