@@ -646,12 +646,17 @@ def ensure_default_teacher():
 def verify_teacher_credentials(username, password):
     """Verify teacher username and password against database."""
     try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT password_hash, teacher_name FROM teachers WHERE username = ?", (username,))
-        result = cursor.fetchone()
-        conn.close()
+        # Use web_conn if available, otherwise create new connection
+        if web_conn is not None:
+            cursor = web_conn.cursor()
+            cursor.execute("SELECT password_hash, teacher_name FROM teachers WHERE username = ?", (username,))
+            result = cursor.fetchone()
+        else:
+            conn = sqlite3.connect(DB_FILE)
+            cursor = conn.cursor()
+            cursor.execute("SELECT password_hash, teacher_name FROM teachers WHERE username = ?", (username,))
+            result = cursor.fetchone()
+            conn.close()
         
         if result:
             stored_hash, teacher_name = result
@@ -666,15 +671,23 @@ def verify_teacher_credentials(username, password):
 def get_teacher_info(username):
     """Get teacher information by username."""
     try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT id, teacher_name, mobile_number, staff_number, created_at 
-            FROM teachers WHERE username = ?
-        """, (username,))
-        result = cursor.fetchone()
-        conn.close()
+        # Use web_conn if available, otherwise create new connection
+        if web_conn is not None:
+            cursor = web_conn.cursor()
+            cursor.execute("""
+                SELECT id, teacher_name, mobile_number, staff_number, created_at 
+                FROM teachers WHERE username = ?
+            """, (username,))
+            result = cursor.fetchone()
+        else:
+            conn = sqlite3.connect(DB_FILE)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, teacher_name, mobile_number, staff_number, created_at 
+                FROM teachers WHERE username = ?
+            """, (username,))
+            result = cursor.fetchone()
+            conn.close()
         
         if result:
             return {
