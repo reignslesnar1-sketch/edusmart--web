@@ -8702,7 +8702,16 @@ def create_flask_app():
         <!-- Results Display -->
         {% if exam_results %}
         <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e7eb;">
-            <h2 style="color: #2b3e50; margin-bottom: 20px;">📊 {{ current_exam_name }} - Detailed Results</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #2b3e50; margin: 0;">📊 {{ current_exam_name }} - Detailed Results</h2>
+                <form method="POST" action="/download_exam_report" style="margin: 0;">
+                    <input type="hidden" name="exam_id" value="{{ exam_id }}">
+                    <input type="hidden" name="admission_number" value="{{ student_profile.admission }}">
+                    <button type="submit" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        📥 Download Report
+                    </button>
+                </form>
+            </div>
             <div style="display: grid; gap: 15px;">
                 {% for result in exam_results %}
                 <div style="background: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; border-radius: 8px;">
@@ -8859,6 +8868,7 @@ def create_flask_app():
                                     'exams': student_exams
                                 },
                                 exam_results=exam_results,
+                                exam_id=exam_id,
                                 current_exam_name=current_exam_name,
                                 admission_number_input=admission_number
                             )
@@ -8932,6 +8942,189 @@ def create_flask_app():
                 )
         
         return render_template_string(CHECK_RESULTS_TEMPLATE, admission_number_input='')
+
+    @web_app.route('/download_exam_report', methods=['POST'])
+    def download_exam_report():
+        """Generate and download PDF report for student exam results."""
+        try:
+            exam_id = request.form.get('exam_id')
+            admission_number = request.form.get('admission_number', '').strip()
+            
+            if not exam_id or not admission_number:
+                return "Missing exam or student information", 400
+            
+            active_cursor = web_cursor if web_cursor is not None else cursor
+            
+            # Get exam info
+            active_cursor.execute("SELECT name FROM exams WHERE id = ?", (exam_id,))
+            exam_result = active_cursor.fetchone()
+            exam_name = exam_result[0] if exam_result else "Exam"
+            
+            # Get student info
+            active_cursor.execute("SELECT student_name, admission_number, stream FROM students WHERE UPPER(TRIM(admission_number)) = UPPER(TRIM(?))", (admission_number,))
+            student_result = active_cursor.fetchone()
+            if not student_result:
+                return "Student not found", 404
+            
+            student_name, student_admission, student_stream = student_result
+            
+            # Get exam results for this student
+            active_cursor.execute("""
+                SELECT sub.name, r.marks
+                FROM results r
+                JOIN subjects sub ON r.subject_id = sub.id
+                JOIN exams e ON r.exam_id = e.id
+                WHERE e.id = ? AND r.student_id = (SELECT id FROM students WHERE admission_number = ?)
+                ORDER BY sub.name
+            """, (exam_id, admission_number))
+            results = active_cursor.fetchall()
+            
+            if not results:
+                return "No results found", 404
+            
+            # Generate PDF
+            pdf_buffer = io.BytesIO()
+            doc = SimpleDocTemplate(pdf_buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=60, bottomMargin=40)
+            story = []
+            styles = getSampleStyleSheet()
+            
+            # Custom styles
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                textColor=colors.HexColor('#667eea'),
+                spaceAfter=10,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold'
+            )
+            
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                textColor=colors.HexColor('#764ba2'),
+                spaceAfter=8,
+                alignment=TA_LEFT,
+                fontName='Helvetica-Bold'
+            )
+            
+            normal_style = ParagraphStyle(
+                'CustomNormal',
+                parent=styles['Normal'],
+                fontSize=11,
+                spaceAfter=6,
+                alignment=TA_LEFT
+            )
+            
+            # Title
+            story.append(Paragraph("🎓 EDUSMART SOLUTIONS", title_style))
+            story.append(Paragraph("Exam Results Report", title_style))
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Student Information Box
+            student_data = [
+                ['Student Name:', student_name],
+                ['Admission Number:', student_admission],
+                ['Stream/Class:', student_stream],
+                ['Exam:', exam_name],
+                ['Date Generated:', datetime.datetime.now().strftime('%d %B %Y')]
+            ]
+            
+            student_table = Table(student_data, colWidths=[2.5*inch, 3.5*inch])
+            student_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#667eea')),
+                ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')])
+            ]))
+            story.append(student_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Results Heading
+            story.append(Paragraph("Exam Results", heading_style))
+            story.append(Spacer(1, 0.15*inch))
+            
+            # Results Table
+            result_data = [['Subject', 'Marks', 'Percentage']]
+            total_marks = 0
+            total_subjects = len(results)
+            
+            for subject, marks in results:
+                percentage = (marks / 100) * 100
+                result_data.append([subject, str(marks), f'{percentage:.1f}%'])
+                total_marks += marks
+            
+            # Add total row
+            avg_percentage = (total_marks / (100 * total_subjects)) * 100 if total_subjects > 0 else 0
+            result_data.append(['TOTAL', str(total_marks), f'{avg_percentage:.1f}%'])
+            
+            results_table = Table(result_data, colWidths=[3.5*inch, 1.5*inch, 1.5*inch])
+            results_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (-3, -1), (-1, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#f8f9fa')]),
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#764ba2')),
+                ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke)
+            ]))
+            story.append(results_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Summary
+            story.append(Paragraph("Summary", heading_style))
+            summary_text = f"""
+            <br/>
+            <b>Total Subjects:</b> {total_subjects}<br/>
+            <b>Total Marks Obtained:</b> {total_marks} / {100 * total_subjects}<br/>
+            <b>Overall Percentage:</b> {avg_percentage:.1f}%<br/>
+            <br/>
+            <b>Note:</b> This is an official exam report generated by EDUSMART SOLUTIONS.
+            """
+            story.append(Paragraph(summary_text, normal_style))
+            
+            # Footer
+            story.append(Spacer(1, 0.2*inch))
+            footer_style = ParagraphStyle(
+                'Footer',
+                parent=styles['Normal'],
+                fontSize=9,
+                textColor=colors.HexColor('#999999'),
+                alignment=TA_CENTER
+            )
+            story.append(Paragraph("© EDUSMART SOLUTIONS | Confidential", footer_style))
+            
+            # Build PDF
+            doc.build(story)
+            pdf_buffer.seek(0)
+            
+            # Return as downloadable file
+            filename = f"{student_name.replace(' ', '_')}_{exam_name.replace(' ', '_')}_Report.pdf"
+            return send_file(
+                pdf_buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=filename
+            )
+        
+        except Exception as e:
+            print(f"Error generating PDF report: {e}")
+            import traceback
+            traceback.print_exc()
+            return f"Error generating report: {str(e)}", 500
 
     return web_app
 
